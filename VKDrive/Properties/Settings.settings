@@ -1,0 +1,30 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="VKDrive.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="VKAppId" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">2044666</Value>
+    </Setting>
+    <Setting Name="Timeout" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">60</Value>
+    </Setting>
+    <Setting Name="MountPoint" Type="System.Char" Scope="User">
+      <Value Profile="(Default)">v</Value>
+    </Setting>
+    <Setting Name="LastFmAPIKey" Type="System.String" Scope="User">
+      <Value Profile="(Default)">f4239dde5c18ad689f3c0dbbb1555271</Value>
+    </Setting>
+    <Setting Name="DownloadSleepTimeout" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">50</Value>
+    </Setting>
+    <Setting Name="DownloadBlockSize" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">1048576</Value>
+    </Setting>
+    <Setting Name="CacheLength" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">2000</Value>
+    </Setting>
+    <Setting Name="FirstStart" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>
