@@ -9,7 +9,7 @@ namespace VKDrive.API
     class VKStorage
     {
         public static string get(string key){
-            string xml = VKAPI.Instance.execute("storage.get", new Dictionary<string, string>() { { "key", key } });
+            string xml = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("storage.get", new Dictionary<string, string>() { { "key", key } }));
             XElement responce = XElement.Parse(xml);
             return responce.Value;
         }
@@ -21,7 +21,7 @@ namespace VKDrive.API
         /// <param name="value"></param>
         public static void set(string key, string value)
         {
-            VKAPI.Instance.execute("storage.set", new Dictionary<string, string>() { { "key", key }, {"value", value} });
+            VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("storage.set", new Dictionary<string, string>() { { "key", key }, {"value", value} }));
         }
 
         public static void remove(string key, string value){

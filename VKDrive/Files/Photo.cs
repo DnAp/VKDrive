@@ -72,7 +72,7 @@ namespace VKDrive.Files
             try
             {
                 Dictionary<string, string> param = new Dictionary<string, string>() { { "photos", PID.ToString() } };
-                string xml = VKAPI.Instance.execute("photos.getById", param);
+                string xml = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("photos.getById", param));
                 XElement responce = XElement.Parse(xml).Element("photo");
                 this.LoadByXml(responce);
                 CreationTime = DateTime.Now;

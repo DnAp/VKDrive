@@ -24,7 +24,7 @@ namespace VKDrive.Dris
         {
             if (file.Property["type"] == "friends.getLists")
             {
-                string xml = VKAPI.Instance.execute("friends.getLists");
+                string xml = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("friends.getLists"));
                 XElement responce = XElement.Parse(xml);
                 IEnumerable<XElement> lids = responce.Elements("list");
                 Folder curFolder = new Folder("Все");
@@ -61,7 +61,7 @@ namespace VKDrive.Dris
                     param.Add("lid", key.ToString());
                 }
 
-                string xml = VKAPI.Instance.execute("friends.get", param);
+                string xml = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("friends.get", param));
 
                 XElement responce = XElement.Parse(xml);
                 IEnumerable<XElement> users = responce.Elements("user");
@@ -72,7 +72,7 @@ namespace VKDrive.Dris
             }
             else if (file.Property["type"] == "subscriptions.get")
             {
-                string xml = VKAPI.Instance.execute("subscriptions.get");
+                string xml = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("subscriptions.get"));
 
                 XElement responce = XElement.Parse(xml);
                 IEnumerable<XElement> uids = responce.Element("users").Elements("uid");
@@ -92,7 +92,7 @@ namespace VKDrive.Dris
                     return true;
                 }
 
-                xml = VKAPI.Instance.execute("users.get", new Dictionary<string, string>() { { "uids", String.Join(",", uidsList) } });
+                xml = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("users.get", new Dictionary<string, string>() { { "uids", String.Join(",", uidsList) } }));
 
                 responce = XElement.Parse(xml);
                 IEnumerable<XElement> users = responce.Elements("user");
@@ -116,7 +116,7 @@ namespace VKDrive.Dris
 
                 if (storageUids.Length > 0)
                 {
-                    string xml = VKAPI.Instance.execute("users.get", new Dictionary<string, string>() { { "uids", storageUids.Replace('\n', ',') } });
+                    string xml = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("users.get", new Dictionary<string, string>() { { "uids", storageUids.Replace('\n', ',') } }));
 
                     XElement responce = XElement.Parse(xml);
                     IEnumerable<XElement> users = responce.Elements("user");
@@ -136,7 +136,7 @@ namespace VKDrive.Dris
             }
             else if (file.Property["type"] == "photos.getAlbums")
             {
-                string xml = VKAPI.Instance.execute("photos.getAlbums", new Dictionary<string, string>() { { "uid", file.Property["uid"] } });
+                string xml = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("photos.getAlbums", new Dictionary<string, string>() { { "uid", file.Property["uid"] } }));
 
                 XElement responce = XElement.Parse(xml);
                 IEnumerable<XElement> aubums = responce.Elements("album");
@@ -162,8 +162,10 @@ namespace VKDrive.Dris
             }
             else if (file.Property["type"] == "photos.get")
             {
-                string xml = VKAPI.Instance.execute("photos.get",
-                    new Dictionary<string, string>() { { "uid", file.Property["uid"] }, { "aid", file.Property["aid"] } });
+                string xml = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery(
+                        "photos.get",
+                        new Dictionary<string, string>() { { "uid", file.Property["uid"] }, { "aid", file.Property["aid"] } }
+                    ));
 
                 XElement responce = XElement.Parse(xml);
                 IEnumerable<XElement> photos = responce.Elements("photo");
@@ -235,7 +237,7 @@ namespace VKDrive.Dris
             string xml;
             try
             {
-                xml = VKAPI.Instance.execute("users.get", new Dictionary<string, string>() { { "uids", filename } });
+                xml = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("users.get", new Dictionary<string, string>() { { "uids", filename } }));
             }
             catch (Exception e)
             {

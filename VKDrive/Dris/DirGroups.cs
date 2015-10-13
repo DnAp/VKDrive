@@ -35,7 +35,7 @@ namespace VKDrive.Dris
                         "Такая группа уже существует."
                     ));
 
-                string xml = VKAPI.Instance.execute("groups.get", new Dictionary<string, string>() { { "extended", "1" } });
+                string xml = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("groups.get", new Dictionary<string, string>() { { "extended", "1" } }));
                 XElement responce = XElement.Parse(xml);
                 IEnumerable<XElement> groups = responce.Elements("group");
                 
@@ -49,7 +49,7 @@ namespace VKDrive.Dris
                 string gids = API.VKStorage.get(STORAGE_KEY);
                 if (gids.Length > 0)
                 {
-                    xml = VKAPI.Instance.execute("groups.getById", new Dictionary<string, string>() { { "gids", gids.Replace('\n', ',') } });
+                    xml = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("groups.getById", new Dictionary<string, string>() { { "gids", gids.Replace('\n', ',') } }));
                     responce = XElement.Parse(xml);
                     groups = responce.Elements("group");
                     foreach (XElement group in groups)
@@ -100,7 +100,7 @@ namespace VKDrive.Dris
                 string xml;
                 try
                 {
-                    xml = VKAPI.Instance.execute("photos.getAlbums", new Dictionary<string, string>() { { "gid", file.Property["gid"] } });
+                    xml = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("photos.getAlbums", new Dictionary<string, string>() { { "gid", file.Property["gid"] } }));
                 }
                 catch (Exception e)
                 {
@@ -131,8 +131,8 @@ namespace VKDrive.Dris
             }
             else if (file.Property["type"] == "photos.get")
             {
-                string xml = VKAPI.Instance.execute("photos.get",
-                    new Dictionary<string, string>() { { "gid", file.Property["gid"] }, { "aid", file.Property["aid"] } });
+                string xml = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("photos.get",
+                    new Dictionary<string, string>() { { "gid", file.Property["gid"] }, { "aid", file.Property["aid"] } }));
 
                 XElement responce = XElement.Parse(xml);
                 IEnumerable<XElement> photos = responce.Elements("photo");
@@ -204,7 +204,7 @@ namespace VKDrive.Dris
             string xml;
             try
             {
-                xml = VKAPI.Instance.execute("groups.getById", new Dictionary<string, string>() { { "gids", filename } });
+                xml = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("groups.getById", new Dictionary<string, string>() { { "gids", filename } }));
             }
             catch (Exception e)
             {

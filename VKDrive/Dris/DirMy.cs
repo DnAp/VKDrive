@@ -36,12 +36,12 @@ namespace VKDrive.Dris
             if (file.Property["type"] == "AudioApi.executeGetAlbums")
             {
                 AudioApi.executeGetAlbums(new Dictionary<string, string>(){
-				        {"uid", VKAPI.Instance.UserID.ToString()}
+				        {"uid", VKAPI.VKAPILibrary.Instance.UserID.ToString()}
 			        }, file.Childs);
             }
             else if (file.Property["type"] == "photos.getAlbums")
             {
-                string xml = VKAPI.Instance.execute("photos.getAlbums");
+                string xml = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("photos.getAlbums"));
 
                 XElement responce = XElement.Parse(xml);
                 IEnumerable<XElement> aubums = responce.Elements("album");
@@ -66,7 +66,7 @@ namespace VKDrive.Dris
             }
             else if (file.Property["type"] == "photos.get")
             {
-                string xml = VKAPI.Instance.execute("photos.get", new Dictionary<string,string>(){ {"aid", file.Property["aid"]} });
+                string xml = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("photos.get", new Dictionary<string,string>(){ {"aid", file.Property["aid"]} }));
 
                 XElement responce = XElement.Parse(xml);
                 IEnumerable<XElement> photos = responce.Elements("photo");

@@ -47,7 +47,7 @@ namespace VKDrive.Files
             try
             {
                 Dictionary<string, string> param = new Dictionary<string, string>() { { "audios", AID.ToString() } };
-                string xml = VKAPI.Instance.execute("audio.getById", param);
+                string xml = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("audio.getById", param));
                 XElement responce = XElement.Parse(xml);
                 Url = responce.Element("url").Value;
                 CreationTime = DateTime.Now;

@@ -49,10 +49,13 @@ namespace VKDrive.Dris
             }
             else if (file.Property["type"] == "search")
             {
-                string xml = VKAPI.Instance.execute("audio.search", new Dictionary<string, string>(){
-				    {"q", file.FileName},
-                    {"count", "200"}
-			    });
+                string xml = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery(
+                    "audio.search", 
+                    new Dictionary<string, string>(){
+				        {"q", file.FileName},
+                        {"count", "200"}
+			        }
+                ));
 
                 IEnumerable<XElement> audio = XElement.Parse(xml).Elements("audio");
                 foreach (XElement curAudio in audio)

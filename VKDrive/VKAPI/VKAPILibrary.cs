@@ -60,39 +60,41 @@ namespace VKDrive.VKAPI
         {
             return execute(new APIQuery(method, paramOld, type));
         }
-        /*
-        public APIQuery mergeQuery(params APIQuery[] query)
-        {
-            List<string> ret = new List<string>();
-            for (int i = 0;i< query.Length;i++)
-            {
-                ret.Add("\"p" + i+"\": ");
-            }
-        }*/
+        
 
         public string execute(APIQuery apiQuery)
         {
             Dictionary<string, string> param = new Dictionary<string, string>(apiQuery.Param);
 
             param.Add("access_token", this.AccessTokien);
+            param.Add("lang", "ru");
+            param.Add("v", "3.37");
 
             string url = "https://api.vk.com/method/" + apiQuery.Method;
             if (apiQuery.Type == VKAPILibrary.XML)
             {
                 url += ".xml";
             }
-            url += "?";
+            string postData = "";
             foreach (KeyValuePair<string, string> val in param)
             {
-                url += val.Key + "=" + System.Uri.EscapeDataString(val.Value) + "&";
+                postData += val.Key + "=" + System.Uri.EscapeDataString(val.Value) + "&";
             }
-            Log.Debug("API Request "+ url);
+            Log.Debug("API Request "+ url + " "+ postData);
+            byte[] byteArray = Encoding.UTF8.GetBytes(postData);
+
+            /// todo keep-alive
             HttpWebRequest WebReq;
             WebReq = (HttpWebRequest)WebRequest.Create(url);
             WebReq.Timeout = Properties.Settings.Default.Timeout * 1000;
-            WebReq.Method = "GET";
+            WebReq.Method = "POST";
             WebReq.ContentType = "application/x-www-form-urlencoded";
             //WebReq.Headers["Cookie"] = "remixlang=0; remixchk=5; remixsid=" + SID;
+
+            WebReq.ContentLength = byteArray.Length;
+            Stream dataStream = WebReq.GetRequestStream();
+            dataStream.Write(byteArray, 0, byteArray.Length);
+            dataStream.Close();
 
             WebResponse webResult = WebReq.GetResponse();
             if (webResult == null)
@@ -104,7 +106,7 @@ namespace VKDrive.VKAPI
             Stream stream = webResult.GetResponseStream();
             StreamReader sr = new StreamReader(stream, System.Text.Encoding.UTF8);
             string result = sr.ReadToEnd();
-
+            
             if (result.Length > 50 && result.IndexOf("<error>", 0, 50) > 0)
             {
                 int start = result.IndexOf("<error_code>") + 12;

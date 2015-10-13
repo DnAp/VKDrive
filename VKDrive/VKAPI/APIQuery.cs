@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,7 +12,7 @@ namespace VKDrive.VKAPI
         public string Method;
         public Dictionary<string, string> Param;
         public int Type;
-        public string Responce;
+        public JToken Responce = null;
 
         public APIQuery(string method)
         {
@@ -32,6 +33,25 @@ namespace VKDrive.VKAPI
             this.Method = method;
             this.Param = param;
             this.Type = type;
+        }
+
+        private string jsonEncode(string val)
+        {
+            return "\"" + val.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
+        }
+
+        override public string ToString()
+        {
+            string res = "API." + Method + "({";
+
+            foreach(KeyValuePair<string, string> kv in Param)
+            {
+                // simple json encode \ => \\  " => \"
+                res += jsonEncode(kv.Key)+":"+ jsonEncode(kv.Value);
+            }
+
+            return res + "})";
+
         }
     }
 }

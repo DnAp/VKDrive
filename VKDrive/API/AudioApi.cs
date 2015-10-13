@@ -34,7 +34,7 @@ namespace VKDrive.API
                     paramSend.Add("offset", albumsKeyValue.Count.ToString());
                 }
                 string xml;
-                xml = VKAPI.Instance.execute("audio.getAlbums", paramSend);
+                xml = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("audio.getAlbums", paramSend));
                 XElement responce = XElement.Parse(xml);
                 IEnumerable<XElement> albums = responce.Elements("album");
                 System.Collections.ArrayList files2 = new System.Collections.ArrayList();
@@ -122,11 +122,11 @@ namespace VKDrive.API
             string countResult;
             if (param.ContainsKey("uid"))
             {
-                countResult = VKAPI.Instance.execute("audio.getCount", new Dictionary<string, string>() { { "oid", param["uid"] } }, VKAPI.JSON);
+                countResult = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("audio.getCount", new Dictionary<string, string>() { { "oid", param["uid"] } }));
             }
             else
             { // gid, а если упадет, так тебе и нужно
-                countResult = VKAPI.Instance.execute("audio.getCount", new Dictionary<string, string>() { { "oid", "-" + param["gid"] } }, VKAPI.JSON);
+                countResult = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("audio.getCount", new Dictionary<string, string>() { { "oid", "-" + param["gid"] } }));
             }
             countResult = countResult.Split(':')[1];
             countResult = countResult.Trim('}', '"');
@@ -156,7 +156,7 @@ namespace VKDrive.API
             for (int page = 0; page < pageCount; page++)
             {
                 paramSend["offset"] = (page * countOnStep).ToString();
-                string xml = VKAPI.Instance.execute("audio.get", paramSend);
+                string xml = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("audio.get", paramSend));
 
                 XElement responce = XElement.Parse(xml);
                 IEnumerable<XElement> mp3List = responce.Elements("audio");

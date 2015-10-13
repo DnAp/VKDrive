@@ -14,6 +14,7 @@ namespace Procurios.Public
 	/// JSON uses Arrays and Objects. These correspond here to the datatypes ArrayList and Hashtable.
 	/// All numbers are parsed to doubles.
 	/// </summary>
+    [Obsolete("Use JsonConvert")]
 	public class JSON
 	{
 		public const int TOKEN_NONE = 0;

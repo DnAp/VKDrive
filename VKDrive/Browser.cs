@@ -199,7 +199,7 @@ namespace VKDrive
                     sessionData.Add(curP[0], curP[1]);
                 }
 
-                VKAPI api = VKAPI.Instance;
+                VKAPI.VKAPILibrary api = VKAPI.VKAPILibrary.Instance;
                 api.AppID = Properties.Settings.Default.VKAppId;
                 api.Expire = Convert.ToInt32(sessionData["expires_in"]);
                 api.UserID = Convert.ToInt32(sessionData["user_id"]);
