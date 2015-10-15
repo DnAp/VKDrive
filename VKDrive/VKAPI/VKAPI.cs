@@ -67,6 +67,8 @@ namespace VKDrive.VKAPI
             {
                 TryThrowException(((JObject)query.Responce).GetValue("error"));
             }
+            
+
             return query.Responce;
         }
 
@@ -101,13 +103,14 @@ namespace VKDrive.VKAPI
                     continue;
                 }
                 executeQuery += "0];";
-
-                var executeAPIQuery = new APIQuery("execute", new Dictionary<string, string>() {{ "code", executeQuery }}, VKAPILibrary.JSON);
+                Dictionary<string, string> param = new Dictionary<string, string>();
+                param.Add("code", executeQuery);
+                var executeAPIQuery = new APIQuery("execute", param, VKAPILibrary.JSON);
 
                 string jsonSrc = VKAPILibrary.Instance.execute(executeAPIQuery);
                 Console.WriteLine(jsonSrc);
                 JObject jObject = JObject.Parse(jsonSrc);
-
+                
                 TryThrowException(jObject.GetValue("error"));
 
                 JToken result = jObject.GetValue("response");
@@ -117,11 +120,21 @@ namespace VKDrive.VKAPI
                     throw new Exception("VK API EXECUTE ERROR: unknown responce :"+ jObject.ToString());
                 }
                 int i = 0;
+                int errorI = 0;
                 foreach (JToken res in (JArray)result)
                 {
                     if (i < qList.Count)
                     {
-                        qList[i].Responce = res;
+                        if (res.Type == JTokenType.Boolean && !(bool)res)
+                        {
+                            JArray executeErrors = (JArray)jObject.GetValue("execute_errors");
+                            qList[i].Responce = executeErrors[errorI];
+                            errorI++;
+                        }
+                        else
+                        {
+                            qList[i].Responce = res;
+                        }
                         i++;
                     }
                 }

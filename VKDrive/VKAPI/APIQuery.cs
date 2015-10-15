@@ -43,14 +43,15 @@ namespace VKDrive.VKAPI
 
         override public string ToString()
         {
-            string res = "API." + Method + "({";
-
-            foreach(KeyValuePair<string, string> kv in Param)
+            string[] param = new string[Param.Count];
+            int i = 0;
+            foreach (KeyValuePair<string, string> kv in Param)
             {
-                res += jsonEncode(kv.Key)+":"+ jsonEncode(kv.Value);
+                param[i] = jsonEncode(kv.Key)+":"+ jsonEncode(kv.Value);
+                i++;
             }
 
-            return res + "})";
+            return "API." + Method + "({" + String.Join(",", param) + "})";
 
         }
     }

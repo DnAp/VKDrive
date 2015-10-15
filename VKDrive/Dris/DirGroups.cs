@@ -35,8 +35,9 @@ namespace VKDrive.Dris
                         "Такая группа уже существует."
                     ));
 
-                items = (JArray)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("groups.get", new Dictionary<string, string>() { { "extended", "1" } }));
-                
+                apiResult = (JObject)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("groups.get", new Dictionary<string, string>() { { "extended", "1" } }));
+                items = (JArray)apiResult.GetValue("items");
+
                 List<int> gruopIds = new List<int>();
 
                 foreach (JObject item in items)
@@ -49,7 +50,7 @@ namespace VKDrive.Dris
                 string gids = API.VKStorage.get(STORAGE_KEY);
                 if (gids.Length > 0)
                 {
-                    items = (JArray)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("groups.getById", new Dictionary<string, string>() { { "gids", gids.Replace('\n', ',') } }));
+                    JArray values = (JArray)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("groups.getById", new Dictionary<string, string>() { { "group_ids", gids.Replace('\n', ',') } }));
 
                     foreach (JObject item in items)
                     {
@@ -128,7 +129,7 @@ namespace VKDrive.Dris
             else if (file.Property["type"] == "photos.get")
             {
                 apiResult = (JObject)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("photos.get",
-                    new Dictionary<string, string>() { { "gid", file.Property["gid"] }, { "aid", file.Property["aid"] } }));
+                    new Dictionary<string, string>() { { "owner_id", "-"+file.Property["gid"] }, { "album_id", file.Property["aid"] } }));
                 items = (JArray)apiResult.GetValue("items");
                 foreach (JObject item in items)
                 {
@@ -194,9 +195,10 @@ namespace VKDrive.Dris
                 return DokanNet.DOKAN_ERROR;
             }
             JObject apiResult;
+            JArray items;
             try
             {
-                apiResult = (JObject)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("groups.getById", new Dictionary<string, string>() { { "gids", filename } }));
+                items = (JArray)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("groups.getById", new Dictionary<string, string>() { { "group_id", filename } }));
             }
             catch (Exception e)
             {
@@ -208,7 +210,6 @@ namespace VKDrive.Dris
             }
 
             ushort count = 0;
-            JArray items = (JArray)apiResult.GetValue("items");
             foreach (JObject item in items)
             {
                 SerializationObject.Group group = item.ToObject<SerializationObject.Group>();

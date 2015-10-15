@@ -68,7 +68,7 @@ namespace VKDrive.VKAPI
 
             param.Add("access_token", this.AccessTokien);
             param.Add("lang", "ru");
-            param.Add("v", "3.37");
+            param.Add("v", "5.37");
 
             string url = "https://api.vk.com/method/" + apiQuery.Method;
             if (apiQuery.Type == VKAPILibrary.XML)
