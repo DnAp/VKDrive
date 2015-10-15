@@ -119,6 +119,7 @@
     <Compile Include="Utils\JSON.cs" />
     <Compile Include="Utils\ShellLink\FileIcon.cs" />
     <Compile Include="Utils\ShellLink\ShellLink.cs" />
+    <Compile Include="VKAPI\SerializationObject.cs" />
     <Compile Include="VKAPI\VKAPI.cs" />
     <Compile Include="VKAPI\VKAPILibrary.cs" />
     <EmbeddedResource Include="Browser.resx" />

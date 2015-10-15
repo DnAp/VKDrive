@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -9,6 +10,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using VKDrive.Files;
+using VKDrive.VKAPI;
 
 namespace VKDrive
 {
@@ -205,11 +207,10 @@ namespace VKDrive
                 api.UserID = Convert.ToInt32(sessionData["user_id"]);
                 api.AccessTokien = (string)sessionData["access_token"];
                 
+                JArray apiResult = (JArray)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("users.get", new Dictionary<string, string>() { { "uids", sessionData["user_id"] } }));
+                SerializationObject.User user = apiResult[0].ToObject<SerializationObject.User>();
 
-                string xml = api.execute("users.get", new Dictionary<string, string>() { { "uids", sessionData["user_id"] } });
-                System.Xml.Linq.XElement user = System.Xml.Linq.XElement.Parse(xml).Element("user");
-                notifyIcon1.Text = "VKDrive: " + user.Element("first_name").Value + " " + user.Element("last_name").Value;
-
+                notifyIcon1.Text = "VKDrive: " + user.FirstName + " " + user.LastName;
 
                 DokanInit.start();
             }

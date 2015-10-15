@@ -1,9 +1,11 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using VKDrive.VKAPI;
 
 namespace VKDrive.Files
 {
@@ -14,38 +16,27 @@ namespace VKDrive.Files
 
         public Photo(string name) : base(name) { }
 
-        public void LoadByXml(XElement curPhoto)
+        public Photo(SerializationObject.Photo photo) : base("")
         {
-            string name = curPhoto.Element("text").Value.Replace("<br>", " ");
-            if (name.Length == 0)
-            {
-                name = curPhoto.Element("pid").Value;
-            }
-            
-            this.FileName = clearName(name.Trim() + ".jpg");
-            PID = Convert.ToInt32(curPhoto.Element("pid").Value);
-            XElement tmp = curPhoto.Element("src_xxbig");
-            if (tmp == null)
-            {
-                Url = curPhoto.Element("src_big").Value;
-            }
-            else
-            {
-                Url = tmp.Value;
-            }
-            DateTime unixTimeStamp = new DateTime(1970, 1, 1, 0, 0, 0, 0);
-            CreationTime = unixTimeStamp.AddSeconds(Convert.ToInt32(curPhoto.Element("created").Value));
-            tmp = curPhoto.Element("updated");
-            if (tmp == null)
-            {
-                LastWriteTime = DateTime.Now;
-            }
-            else
-            {
-                LastWriteTime = unixTimeStamp.AddSeconds(Convert.ToInt32(tmp.Value));
-            }
+            loadByObject(photo);
         }
 
+        private void loadByObject(SerializationObject.Photo photo)
+        {
+            string name = photo.Text.Replace("<br>", " ");
+            if (name.Length == 0)
+            {
+                name = photo.Id.ToString();
+            }
+
+            this.FileName = clearName(name.Trim() + ".jpg");
+            PID = photo.Id;
+            Url = photo.GetSrc();
+            DateTime unixTimeStamp = new DateTime(1970, 1, 1, 0, 0, 0, 0);
+            CreationTime = unixTimeStamp.AddSeconds(photo.Created);
+            LastWriteTime = CreationTime;
+        }
+        
         public override int ReadFile(
             byte[] buffer,
             ref uint readBytes,
@@ -72,10 +63,9 @@ namespace VKDrive.Files
             try
             {
                 Dictionary<string, string> param = new Dictionary<string, string>() { { "photos", PID.ToString() } };
-                string xml = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("photos.getById", param));
-                XElement responce = XElement.Parse(xml).Element("photo");
-                this.LoadByXml(responce);
-                CreationTime = DateTime.Now;
+                SerializationObject.Photo photo = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("photos.getById", param)).ToObject<SerializationObject.Photo>();
+                loadByObject(photo);
+                LastWriteTime = DateTime.Now;
             }
             catch (Exception e)
             {

@@ -13,7 +13,7 @@ namespace VKDrive.VKAPI
         public Dictionary<string, string> Param;
         public int Type;
         public JToken Responce = null;
-
+        
         public APIQuery(string method)
         {
             construct(method, new Dictionary<string, string>(), VKAPILibrary.XML);
@@ -37,6 +37,7 @@ namespace VKDrive.VKAPI
 
         private string jsonEncode(string val)
         {
+            // simple json encode \ => \\  " => \"
             return "\"" + val.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
         }
 
@@ -46,7 +47,6 @@ namespace VKDrive.VKAPI
 
             foreach(KeyValuePair<string, string> kv in Param)
             {
-                // simple json encode \ => \\  " => \"
                 res += jsonEncode(kv.Key)+":"+ jsonEncode(kv.Value);
             }
 

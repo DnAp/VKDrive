@@ -1,4 +1,5 @@
 ﻿using Dokan;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,6 +8,7 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using VKDrive.API;
 using VKDrive.Files;
+using VKDrive.VKAPI;
 
 namespace VKDrive.Dris
 {
@@ -41,19 +43,19 @@ namespace VKDrive.Dris
             }
             else if (file.Property["type"] == "photos.getAlbums")
             {
-                string xml = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("photos.getAlbums"));
-
-                XElement responce = XElement.Parse(xml);
-                IEnumerable<XElement> aubums = responce.Elements("album");
+                JObject apiResult = (JObject)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("photos.getAlbums"));
+                JArray items = (JArray)apiResult.GetValue("items");
                 Folder curFolder;
-                foreach (XElement aubum in aubums)
+                foreach (JObject item in items)
                 {
-                    curFolder = new Folder(aubum.Element("title").Value);
+                    SerializationObject.Album album = item.ToObject<SerializationObject.Album>();
+
+                    curFolder = new Folder(album.Title);
                     curFolder.Property.Add("type", "photos.get");
-                    curFolder.Property.Add("aid", aubum.Element("aid").Value);
+                    curFolder.Property.Add("aid", album.Id.ToString());
                     DateTime unixTimeStamp = new DateTime(1970, 1, 1, 0, 0, 0, 0);
-                    curFolder.CreationTime = unixTimeStamp.AddSeconds(Convert.ToInt32(aubum.Element("created").Value));
-                    curFolder.LastWriteTime = unixTimeStamp.AddSeconds(Convert.ToInt32(aubum.Element("updated").Value));
+                    curFolder.CreationTime = unixTimeStamp.AddSeconds(album.Created);
+                    curFolder.LastWriteTime = unixTimeStamp.AddSeconds(album.Updated);
                     file.ChildsAdd(curFolder);
                 }
             }
@@ -66,15 +68,13 @@ namespace VKDrive.Dris
             }
             else if (file.Property["type"] == "photos.get")
             {
-                string xml = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("photos.get", new Dictionary<string,string>(){ {"aid", file.Property["aid"]} }));
+                JObject apiResult = (JObject)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("photos.get", new Dictionary<string,string>(){ {"aid", file.Property["aid"]} }));
 
-                XElement responce = XElement.Parse(xml);
-                IEnumerable<XElement> photos = responce.Elements("photo");
                 Photo photo;
-                foreach (XElement curPhoto in photos)
+                JArray items = (JArray)apiResult.GetValue("items");
+                foreach (JObject item in items)
                 {
-                    photo = new Photo("");
-                    photo.LoadByXml(curPhoto);
+                    photo = new Photo(item.ToObject<SerializationObject.Photo>());
                     file.ChildsAdd(photo);
                 }
             }

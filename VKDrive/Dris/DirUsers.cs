@@ -1,4 +1,5 @@
 ﻿using Dokan;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,6 +8,7 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using VKDrive.API;
 using VKDrive.Files;
+using VKDrive.VKAPI;
 
 namespace VKDrive.Dris
 {
@@ -24,19 +26,19 @@ namespace VKDrive.Dris
         {
             if (file.Property["type"] == "friends.getLists")
             {
-                string xml = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("friends.getLists"));
-                XElement responce = XElement.Parse(xml);
-                IEnumerable<XElement> lids = responce.Elements("list");
+                JObject apiResult = (JObject)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("friends.getLists"));
+                JArray items = (JArray)apiResult.GetValue("items");
+                
                 Folder curFolder = new Folder("Все");
                 curFolder.Property.Add("type", "friends.get");
                 curFolder.Property.Add("lid", "0");
                 file.ChildsAdd(curFolder);
 
-                foreach (XElement lid in lids)
+                foreach (JObject item in items)
                 {
-                    curFolder = new Folder(lid.Element("name").Value);
+                    curFolder = new Folder(item.GetValue("name").ToString()); // посмотреть типы данных
                     curFolder.Property.Add("type", "friends.get");
-                    curFolder.Property.Add("lid", lid.Element("lid").Value);
+                    curFolder.Property.Add("lid", item.GetValue("id").ToString());
                     file.ChildsAdd(curFolder);
                 }
 
@@ -61,18 +63,18 @@ namespace VKDrive.Dris
                     param.Add("lid", key.ToString());
                 }
 
-                string xml = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("friends.get", param));
+                JObject apiResult = (JObject)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("friends.get", param));
+                JArray items = (JArray)apiResult.GetValue("items");
 
-                XElement responce = XElement.Parse(xml);
-                IEnumerable<XElement> users = responce.Elements("user");
-                foreach (XElement user in users)
+                foreach (JObject item in items)
                 {
-                    file.ChildsAdd(CreateUserFolder(user));
+                    file.ChildsAdd(CreateUserFolder(item.ToObject<SerializationObject.User>()));
                 }
             }
             else if (file.Property["type"] == "subscriptions.get")
             {
-                string xml = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("subscriptions.get"));
+                /*
+                JObject apiResult = (JObject)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("users.getSubscriptions"));
 
                 XElement responce = XElement.Parse(xml);
                 IEnumerable<XElement> uids = responce.Element("users").Elements("uid");
@@ -99,7 +101,7 @@ namespace VKDrive.Dris
                 foreach (XElement user in users)
                 {
                     file.ChildsAdd(CreateUserFolder(user));
-                }
+                }*/
             }
             else if (file.Property["type"] == "storage.get")
             {
@@ -116,13 +118,11 @@ namespace VKDrive.Dris
 
                 if (storageUids.Length > 0)
                 {
-                    string xml = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("users.get", new Dictionary<string, string>() { { "uids", storageUids.Replace('\n', ',') } }));
-
-                    XElement responce = XElement.Parse(xml);
-                    IEnumerable<XElement> users = responce.Elements("user");
-                    foreach (XElement user in users)
+                    JObject apiResult = (JObject)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("users.get", new Dictionary<string, string>() { { "uids", storageUids.Replace('\n', ',') } }));
+                    JArray items = (JArray)apiResult.GetValue("items");
+                    foreach (JObject item in items)
                     {
-                        file.ChildsAdd(CreateUserFolder(user));
+                        file.ChildsAdd(CreateUserFolder(item.ToObject<SerializationObject.User>()));
                     }
                 }
             }
@@ -136,20 +136,21 @@ namespace VKDrive.Dris
             }
             else if (file.Property["type"] == "photos.getAlbums")
             {
-                string xml = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("photos.getAlbums", new Dictionary<string, string>() { { "uid", file.Property["uid"] } }));
+                JObject apiResult = (JObject)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("photos.getAlbums", new Dictionary<string, string>() { { "uid", file.Property["uid"] } }));
+                JArray items = (JArray)apiResult.GetValue("items");
 
-                XElement responce = XElement.Parse(xml);
-                IEnumerable<XElement> aubums = responce.Elements("album");
                 Folder curFolder;
-                foreach (XElement aubum in aubums)
+                foreach (JObject item in items)
                 {
-                    curFolder = new Folder(aubum.Element("title").Value);
+                    SerializationObject.Album album = item.ToObject<SerializationObject.Album>();
+
+                    curFolder = new Folder(album.Title);
                     curFolder.Property.Add("type", "photos.get");
                     curFolder.Property.Add("uid", file.Property["uid"]);
-                    curFolder.Property.Add("aid", aubum.Element("aid").Value);
+                    curFolder.Property.Add("aid", album.Id.ToString());
                     DateTime unixTimeStamp = new DateTime(1970, 1, 1, 0, 0, 0, 0);
-                    curFolder.CreationTime = unixTimeStamp.AddSeconds(Convert.ToInt32(aubum.Element("created").Value));
-                    curFolder.LastWriteTime = unixTimeStamp.AddSeconds(Convert.ToInt32(aubum.Element("updated").Value));
+                    curFolder.CreationTime = unixTimeStamp.AddSeconds(album.Created);
+                    curFolder.LastWriteTime = unixTimeStamp.AddSeconds(album.Updated);
                     file.ChildsAdd(curFolder);
                 }
             }
@@ -162,18 +163,16 @@ namespace VKDrive.Dris
             }
             else if (file.Property["type"] == "photos.get")
             {
-                string xml = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery(
+                JObject apiResult = (JObject)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery(
                         "photos.get",
                         new Dictionary<string, string>() { { "uid", file.Property["uid"] }, { "aid", file.Property["aid"] } }
                     ));
 
-                XElement responce = XElement.Parse(xml);
-                IEnumerable<XElement> photos = responce.Elements("photo");
                 Photo photo;
-                foreach (XElement curPhoto in photos)
+                JArray items = (JArray)apiResult.GetValue("items");
+                foreach (JObject item in items)
                 {
-                    photo = new Photo("");
-                    photo.LoadByXml(curPhoto);
+                    photo = new Photo(item.ToObject<SerializationObject.Photo>());
                     file.ChildsAdd(photo);
                 }
             }
@@ -194,11 +193,11 @@ namespace VKDrive.Dris
         /// </summary>
         /// <param name="user"></param>
         /// <returns></returns>
-        private Folder CreateUserFolder(XElement user)
+        private Folder CreateUserFolder(SerializationObject.User user)
         {
-            Folder curFolder = new Folder(user.Element("first_name").Value + " " + user.Element("last_name").Value);
+            Folder curFolder = new Folder(user.FirstName+" "+user.LastName);
 
-            string uid = user.Element("uid").Value;
+            string uid = user.Id.ToString();
 
             Folder subFolder = new Folder("Аудиозаписи");
             subFolder.Property.Add("type", "AudioApi.executeGetAlbums");
@@ -234,10 +233,10 @@ namespace VKDrive.Dris
             {
                 return DokanNet.DOKAN_ERROR;
             }
-            string xml;
+            JObject apiResult;
             try
             {
-                xml = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("users.get", new Dictionary<string, string>() { { "uids", filename } }));
+                apiResult = (JObject)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("users.get", new Dictionary<string, string>() { { "uids", filename } }));
             }
             catch (Exception e)
             {
@@ -248,12 +247,11 @@ namespace VKDrive.Dris
                 return DokanNet.DOKAN_ERROR;
             }
 
-            XElement responce = XElement.Parse(xml);
-            IEnumerable<XElement> groups = responce.Elements("user");
             ushort count = 0;
-            foreach (XElement user in groups)
+            JArray items = (JArray)apiResult.GetValue("items");
+            foreach (JObject item in items)
             {
-                string uid = user.Element("uid").Value;
+                SerializationObject.User user = item.ToObject<SerializationObject.User>();
                 bool isDooble = false;
                 /*foreach (VFile file in RootNode.Childs)
                 {
@@ -273,12 +271,12 @@ namespace VKDrive.Dris
                     continue;
                 }
 
-                if (user.Element("first_name").Value == "DELETED")
+                if (user.FirstName == "DELETED" || user.Deactivated != null)
                 {
                     continue;
                 }
 
-                API.VKStorage.join(STORAGE_KEY, uid);
+                API.VKStorage.join(STORAGE_KEY, user.Id.ToString());
 
                 file.ChildsAdd(CreateUserFolder(user));
 

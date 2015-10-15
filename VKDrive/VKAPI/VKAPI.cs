@@ -1,4 +1,4 @@
-﻿using log4net;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   using log4net;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
@@ -49,27 +49,56 @@ namespace VKDrive.VKAPI
             }
         }
 
-        public string StartTaskSync(APIQuery query)
+        public JToken StartTaskSync(APIQuery query)
         {
             concurrentQueue.Enqueue(query);
-            resetEvent.WaitOne();
+            byte i = 0;
+            do
+            {
+                resetEvent.WaitOne();
+                if(i==3)
+                {
+                    Log.Error("VK API EXECUTE ERROR: long wait");
+                    throw new Exception("VK API EXECUTE ERROR: long wait");
+                }
+                i++;
+            } while (query.Responce == null);
+            if (query.Responce.GetType() == typeof(JObject))
+            {
+                TryThrowException(((JObject)query.Responce).GetValue("error"));
+            }
+            return query.Responce;
+        }
 
-            return "";
+        private void TryThrowException(JToken errorJs)
+        {
+            if (errorJs != null)
+            {
+                VKResponceError error = errorJs.ToObject<VKResponceError>();
+                Log.Error("VK API EXECUTE ERROR: " + error.ErrorCode + ":" + error.ErrorMsg);
+                Exception e = new Exception("VK API EXECUTE ERROR: " + error.ErrorCode + ":" + error.ErrorMsg);
+                e.Data.Add("code", error.ErrorCode);
+                e.Data.Add("msg", error.ErrorMsg);
+                throw e;
+            }
         }
 
         public void DoWork()
         {
             while (isAlive)
             {
+                Thread.Sleep(TIMEOUT);
                 APIQuery query;
                 List<APIQuery> qList = new List<APIQuery>();
                 String executeQuery = "return [";
                 while (concurrentQueue.TryDequeue(out query))
                 {
                     qList.Add(query);
-
-
                     executeQuery += query.ToString() + ",";
+                }
+                if(qList.Count == 0)
+                {
+                    continue;
                 }
                 executeQuery += "0];";
 
@@ -78,17 +107,10 @@ namespace VKDrive.VKAPI
                 string jsonSrc = VKAPILibrary.Instance.execute(executeAPIQuery);
                 Console.WriteLine(jsonSrc);
                 JObject jObject = JObject.Parse(jsonSrc);
-                JToken errorJs = jObject.GetValue("error");
-                if(errorJs != null)
-                {
-                    VKResponceError error = errorJs.ToObject<VKResponceError>();
-                    Log.Error("VK API EXECUTE ERROR: " + error.ErrorCode + ":" + error.ErrorMsg);
-                    Exception e = new Exception("VK API EXECUTE ERROR: " + error.ErrorCode + ":" + error.ErrorMsg);
-                    e.Data.Add("code", error.ErrorCode);
-                    e.Data.Add("msg", error.ErrorMsg);
-                    throw e;
-                }
-                JToken result = jObject.GetValue("result");
+
+                TryThrowException(jObject.GetValue("error"));
+
+                JToken result = jObject.GetValue("response");
                 if (result.GetType() != typeof(JArray) || ((JArray)result).Count < qList.Count)
                 {
                     Log.Error("VK API EXECUTE ERROR: unknown responce :" + jObject.ToString());
@@ -97,12 +119,14 @@ namespace VKDrive.VKAPI
                 int i = 0;
                 foreach (JToken res in (JArray)result)
                 {
-                    qList[i].Responce = res;
-                    i++;
+                    if (i < qList.Count)
+                    {
+                        qList[i].Responce = res;
+                        i++;
+                    }
                 }
 
                 resetEvent.Set();
-                Thread.Sleep(TIMEOUT);
             }
         }
 
@@ -112,3 +136,4 @@ namespace VKDrive.VKAPI
         }
     }
 }
+                                                                                                                                        

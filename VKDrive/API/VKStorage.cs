@@ -9,9 +9,7 @@ namespace VKDrive.API
     class VKStorage
     {
         public static string get(string key){
-            string xml = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("storage.get", new Dictionary<string, string>() { { "key", key } }));
-            XElement responce = XElement.Parse(xml);
-            return responce.Value;
+            return VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("storage.get", new Dictionary<string, string>() { { "key", key } })).ToObject<string>();
         }
         /// <summary>
         /// Помни %username% максимальнся длинна 4096 байт

@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -7,6 +9,7 @@ using System.Threading.Tasks;
 using System.Xml;
 using System.Xml.Linq;
 using VKDrive.Files;
+using VKDrive.VKAPI;
 
 namespace VKDrive.API
 {
@@ -33,27 +36,20 @@ namespace VKDrive.API
                 {
                     paramSend.Add("offset", albumsKeyValue.Count.ToString());
                 }
-                string xml;
-                xml = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("audio.getAlbums", paramSend));
-                XElement responce = XElement.Parse(xml);
-                IEnumerable<XElement> albums = responce.Elements("album");
-                System.Collections.ArrayList files2 = new System.Collections.ArrayList();
-
-                string name;
-
 
                 Folder fileNode;
 
-                // 2 уровня
-                if (albums.Count() > 0)
+                JObject apiRequest = (JObject)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("audio.getAlbums", paramSend));
+                
+                JArray items = (JArray)apiRequest.GetValue("items");
+                if (items.Count > 0)
                 {
-                    max = Convert.ToInt32(responce.Element("count").Value);
-
-                    foreach (XElement album in albums)
+                    max = apiRequest.GetValue("count").ToObject<int>();
+                    foreach (JToken item in items)
                     {
-                        int key = Convert.ToInt32(album.Element("album_id").Value);
-                        name = album.Element("title").Value;
-                        fileNode = new Folder(name);
+                        SerializationObject.Album album = item.ToObject<SerializationObject.Album>();
+
+                        fileNode = new Folder(album.Title);
                         if (waitParam)
                         {
                             fileNode.Property.Add("type", "wait");
@@ -61,7 +57,7 @@ namespace VKDrive.API
                         else
                         {
                             fileNode.Property.Add("type", "audio.getInAlbum");
-                            fileNode.Property.Add("album_id", key.ToString());
+                            fileNode.Property.Add("album_id", album.Id.ToString());
                             if (param.ContainsKey("uid"))
                             {
                                 fileNode.Property.Add("uid", param["uid"]);
@@ -73,9 +69,10 @@ namespace VKDrive.API
                         }
                         fileNode.IsLoaded = false;
                         files.Add(fileNode);
-                        albumsKeyValue.Add(key, fileNode);
+                        albumsKeyValue.Add(album.Id, fileNode);
                     }
                 }
+                
                 if (max > -1)
                 {
                     executeGetAlbumsRecursive(albumsKeyValue, param, files, max, waitParam);
@@ -119,19 +116,10 @@ namespace VKDrive.API
 
         protected static int getCount(Dictionary<string, string> param)
         {
-            string countResult;
-            if (param.ContainsKey("uid"))
-            {
-                countResult = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("audio.getCount", new Dictionary<string, string>() { { "oid", param["uid"] } }));
-            }
-            else
-            { // gid, а если упадет, так тебе и нужно
-                countResult = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("audio.getCount", new Dictionary<string, string>() { { "oid", "-" + param["gid"] } }));
-            }
-            countResult = countResult.Split(':')[1];
-            countResult = countResult.Trim('}', '"');
-
-            return Convert.ToInt32(countResult);
+            Dictionary<string, string> p = new Dictionary<string, string>();
+            // gid, а если упадет, так тебе и нужно
+            p.Add("oid", param.ContainsKey("uid") ? param["uid"] : "-" + param["gid"]);
+            return VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("audio.getCount", p)).ToObject<int>();
         }
 
         public static void loadMP3(Dictionary<string, string> param, IList<VFile> files)
@@ -156,15 +144,12 @@ namespace VKDrive.API
             for (int page = 0; page < pageCount; page++)
             {
                 paramSend["offset"] = (page * countOnStep).ToString();
-                string xml = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("audio.get", paramSend));
-
-                XElement responce = XElement.Parse(xml);
-                IEnumerable<XElement> mp3List = responce.Elements("audio");
-                foreach (XElement attr in mp3List)
+                JObject apiRequest = (JObject)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("audio.get", paramSend));
+                JArray items = (JArray)apiRequest.GetValue("items");
+                foreach (JToken item in items)
                 {
-
-                    Mp3 finfo = new Mp3("", attr);
-
+                    SerializationObject.Audio audio = item.ToObject<SerializationObject.Audio>();
+                    Mp3 finfo = new Mp3(audio);
                     if (albumsKeyValue.Count == 0)
                     {
                         files.Add(finfo);
@@ -172,16 +157,15 @@ namespace VKDrive.API
                     else
                     {
                         ((Folder)albumsKeyValue[0]).ChildsAdd(finfo);
-                        XElement albumX = attr.Element("album");
-                        if (albumX != null)
+                        if (audio.AlbumId != 0)
                         {
-                            albimId = Convert.ToInt32(albumX.Value);
                             // Здесь ньюанс, в ChildsAdd есть уникальность которая изменяет имя. 
                             // Но так как в общий список мы добавляем первым, то имя файла будет уникальное всегда
-                            ((Folder)albumsKeyValue[Convert.ToInt32(albumX.Value)]).ChildsAdd(finfo);
+                            ((Folder)albumsKeyValue[audio.AlbumId]).ChildsAdd(finfo);
                         }
                     }
                 }
+                
             }
 
             foreach (Folder folder in albumsKeyValue.Values)

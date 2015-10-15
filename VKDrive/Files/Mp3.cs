@@ -1,9 +1,11 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using VKDrive.VKAPI;
 
 namespace VKDrive.Files
 {
@@ -15,10 +17,13 @@ namespace VKDrive.Files
 
         public Mp3(string name) : base(name) { }
 
-        public Mp3(string name, XElement curAudio) : base(name) {
-            LoadByXml(curAudio);
+        public Mp3(SerializationObject.Audio curAudio) : base("")
+        {
+            FileName = Mp3.EscapeFileName(curAudio.Artist + " - " + curAudio.Title) + ".mp3";
+            Url = curAudio.Url;
+            UID = curAudio.OwnerId;
+            AID = curAudio.AId;
         }
-        
 
         public override int ReadFile(
             byte[] buffer,
@@ -47,9 +52,8 @@ namespace VKDrive.Files
             try
             {
                 Dictionary<string, string> param = new Dictionary<string, string>() { { "audios", AID.ToString() } };
-                string xml = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("audio.getById", param));
-                XElement responce = XElement.Parse(xml);
-                Url = responce.Element("url").Value;
+                JArray apiResult = (JArray)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("audio.getById", param));
+                Url = apiResult[0].ToObject<SerializationObject.Audio>().Url;
                 CreationTime = DateTime.Now;
             }
             catch (Exception e)

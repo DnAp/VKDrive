@@ -1,4 +1,5 @@
 ﻿using Dokan;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using VKDrive.Files;
+using VKDrive.VKAPI;
 
 namespace VKDrive.Dris
 {
@@ -49,7 +51,7 @@ namespace VKDrive.Dris
             }
             else if (file.Property["type"] == "search")
             {
-                string xml = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery(
+                JObject apiResult = (JObject)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery(
                     "audio.search", 
                     new Dictionary<string, string>(){
 				        {"q", file.FileName},
@@ -57,10 +59,10 @@ namespace VKDrive.Dris
 			        }
                 ));
 
-                IEnumerable<XElement> audio = XElement.Parse(xml).Elements("audio");
-                foreach (XElement curAudio in audio)
+                JArray items = (JArray)apiResult.GetValue("items");
+                foreach (JObject item in items)
                 {
-                    file.ChildsAdd(new Mp3("", curAudio));
+                    file.ChildsAdd(new Mp3(item.ToObject< SerializationObject.Audio>()));
                 }
             }
             else

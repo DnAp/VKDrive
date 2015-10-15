@@ -1,13 +1,11 @@
 ﻿using Dokan;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 using VKDrive.API;
 using VKDrive.Files;
 using System.Text.RegularExpressions;
+using Newtonsoft.Json.Linq;
+using VKDrive.VKAPI;
 
 namespace VKDrive.Dris
 {
@@ -24,6 +22,8 @@ namespace VKDrive.Dris
 
         public override bool _LoadFile(Files.Folder file)
         {
+            JObject apiResult;
+            JArray items;
             if (file.Property["type"] == "groups.get")
             {
                 file.ChildsAdd(new Files.Settings("Добавить группу.lnk"));
@@ -35,30 +35,27 @@ namespace VKDrive.Dris
                         "Такая группа уже существует."
                     ));
 
-                string xml = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("groups.get", new Dictionary<string, string>() { { "extended", "1" } }));
-                XElement responce = XElement.Parse(xml);
-                IEnumerable<XElement> groups = responce.Elements("group");
+                items = (JArray)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("groups.get", new Dictionary<string, string>() { { "extended", "1" } }));
                 
-                List<string> gruopIds = new List<string>();
+                List<int> gruopIds = new List<int>();
 
-                foreach (XElement group in groups)
+                foreach (JObject item in items)
                 {
+                    SerializationObject.Group group = item.ToObject<SerializationObject.Group>();
                     file.ChildsAdd(CreateGroupFolder(group));
-                    gruopIds.Add(group.Element("gid").Value);
+                    gruopIds.Add(group.Id);
                 }
+                
                 string gids = API.VKStorage.get(STORAGE_KEY);
                 if (gids.Length > 0)
                 {
-                    xml = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("groups.getById", new Dictionary<string, string>() { { "gids", gids.Replace('\n', ',') } }));
-                    responce = XElement.Parse(xml);
-                    groups = responce.Elements("group");
-                    foreach (XElement group in groups)
+                    items = (JArray)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("groups.getById", new Dictionary<string, string>() { { "gids", gids.Replace('\n', ',') } }));
+
+                    foreach (JObject item in items)
                     {
-                        string gid = group.Element("gid").Value;
-
-                        if (gruopIds.IndexOf(gid) > -1)
+                        SerializationObject.Group group = item.ToObject<SerializationObject.Group>();
+                        if (gruopIds.IndexOf(group.Id) > -1)
                             continue;
-
                         file.ChildsAdd(CreateGroupFolder(group));
                     }
                 }
@@ -97,10 +94,10 @@ namespace VKDrive.Dris
             }
             else if (file.Property["type"] == "photos.getAlbums")
             {
-                string xml;
                 try
                 {
-                    xml = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("photos.getAlbums", new Dictionary<string, string>() { { "gid", file.Property["gid"] } }));
+                    apiResult = (JObject)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("photos.getAlbums", new Dictionary<string, string>() { { "gid", file.Property["gid"] } }));
+                    items = (JArray)apiResult.GetValue("items");
                 }
                 catch (Exception e)
                 {
@@ -114,34 +111,29 @@ namespace VKDrive.Dris
                     }
                     return false;
                 }
-                XElement responce = XElement.Parse(xml);
-                IEnumerable<XElement> aubums = responce.Elements("album");
                 Folder curFolder;
-                foreach (XElement aubum in aubums)
+                foreach (JObject item in items)
                 {
-                    curFolder = new Folder(aubum.Element("title").Value);
+                    SerializationObject.Album album = item.ToObject<SerializationObject.Album>();
+                    curFolder = new Folder(album.Title);
                     curFolder.Property.Add("type", "photos.get");
                     curFolder.Property.Add("gid", file.Property["gid"]);
-                    curFolder.Property.Add("aid", aubum.Element("aid").Value);
+                    curFolder.Property.Add("aid", album.Id.ToString());
                     DateTime unixTimeStamp = new DateTime(1970, 1, 1, 0, 0, 0, 0);
-                    curFolder.CreationTime = unixTimeStamp.AddSeconds(Convert.ToInt32(aubum.Element("created").Value));
-                    curFolder.LastWriteTime = unixTimeStamp.AddSeconds(Convert.ToInt32(aubum.Element("updated").Value));
+                    curFolder.CreationTime = unixTimeStamp.AddSeconds(album.Created);
+                    curFolder.LastWriteTime = unixTimeStamp.AddSeconds(album.Updated);
                     file.ChildsAdd(curFolder);
                 }
             }
             else if (file.Property["type"] == "photos.get")
             {
-                string xml = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("photos.get",
+                apiResult = (JObject)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("photos.get",
                     new Dictionary<string, string>() { { "gid", file.Property["gid"] }, { "aid", file.Property["aid"] } }));
-
-                XElement responce = XElement.Parse(xml);
-                IEnumerable<XElement> photos = responce.Elements("photo");
-                Photo photo;
-                foreach (XElement curPhoto in photos)
+                items = (JArray)apiResult.GetValue("items");
+                foreach (JObject item in items)
                 {
-                    photo = new Photo("");
-                    photo.LoadByXml(curPhoto);
-                    file.ChildsAdd(photo);
+                    SerializationObject.Photo photo = item.ToObject<SerializationObject.Photo>();
+                    file.ChildsAdd(new Photo(photo));
                 }
             }
             else if (file.Property["type"] == "wait")
@@ -160,10 +152,10 @@ namespace VKDrive.Dris
             return true;
         }
 
-        private Folder CreateGroupFolder(XElement group)
+        private Folder CreateGroupFolder(SerializationObject.Group group)
         {
-            string gid = group.Element("gid").Value;
-            Folder curFolder = new Folder(group.Element("name").Value);
+            string gid = group.Id.ToString();
+            Folder curFolder = new Folder(group.Name);
             curFolder.Property.Add("gid", gid);
 
             Folder subFolder = new Folder("Аудиозаписи");
@@ -201,10 +193,10 @@ namespace VKDrive.Dris
             {
                 return DokanNet.DOKAN_ERROR;
             }
-            string xml;
+            JObject apiResult;
             try
             {
-                xml = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("groups.getById", new Dictionary<string, string>() { { "gids", filename } }));
+                apiResult = (JObject)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("groups.getById", new Dictionary<string, string>() { { "gids", filename } }));
             }
             catch (Exception e)
             {
@@ -215,13 +207,13 @@ namespace VKDrive.Dris
                 return DokanNet.DOKAN_ERROR;
             }
 
-            XElement responce = XElement.Parse(xml);
-            IEnumerable<XElement> groups = responce.Elements("group");
-            
             ushort count = 0;
-            foreach (XElement group in groups)
+            JArray items = (JArray)apiResult.GetValue("items");
+            foreach (JObject item in items)
             {
-                string gid = group.Element("gid").Value;
+                SerializationObject.Group group = item.ToObject<SerializationObject.Group>();
+
+                string gid = group.Id.ToString();
                 bool isDooble = false;
                 foreach (VFile curFile in file.Childs)
                 {
@@ -241,7 +233,7 @@ namespace VKDrive.Dris
                     continue;
                 }
 
-                if (group.Element("name").Value == "DELETED")
+                if (group.Deactivated != null)
                 {
                     continue;
                 }
@@ -250,6 +242,7 @@ namespace VKDrive.Dris
 
                 file.ChildsAdd(CreateGroupFolder(group));
                 count++;
+
             }
 
             if (count > 0)
