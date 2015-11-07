@@ -20,14 +20,15 @@ namespace VKDrive
 
         public Browser()
         {
-            Log.init();
-            Log.l("############## " + DateTime.Now.ToString());
+            Program.Log.Info("Start vkdrive");
+
             
             bool mutexWasCreated;
             System.Threading.Mutex mutex = new System.Threading.Mutex(true, "VKDrive", out mutexWasCreated);
             if (!mutexWasCreated)
             {
-                System.Environment.Exit(0);
+                Program.Log.Warn("Double start! Exit.");
+                Environment.Exit(0);
                 return;
             }
 
@@ -36,8 +37,10 @@ namespace VKDrive
             // Важная процедура проверки установленности dokan
             if (!DokanInit.test())
             {
+                Program.Log.Warn("Dokan not installed");
                 if (DokanInit.installLib() == 0)
                 {
+                    Program.Log.Warn("Dokan fail install?");
                     notifyIcon1.Visible = false;
                     System.Environment.Exit(0);
                     return;
@@ -55,7 +58,7 @@ namespace VKDrive
         private void Browser_Load(object sender, EventArgs e)
         {
             this.Hide();
-            
+            // todo найти диск даже если он занят. Но не ошметком вкдрайв
             if (Properties.Settings.Default.FirstStart)
             {
                 /// Первый старт, поиск подходящего диска
@@ -142,14 +145,14 @@ namespace VKDrive
         private void webBrowser1_DocumentCompleted(object sender, WebBrowserDocumentCompletedEventArgs e)
         {
             this.IsVisibilityChangeAllowed = true;
-            
-            Console.WriteLine(webBrowser1.Url.AbsoluteUri);
+
+            Program.Log.Debug("Document load completed: "+ webBrowser1.Url.AbsoluteUri);
             if (webBrowserLogoutWait == 1)
             {
                 HtmlElement logout = webBrowser1.Document.GetElementById("logout_link");
                 if (logout != null)
                 {
-                    Console.WriteLine(logout.GetAttribute("href"));
+                    Program.Log.Debug("Document load completed have logout lonk: " + logout.GetAttribute("href"));
                     webBrowser1.Url = new Uri(logout.GetAttribute("href"));
                     webBrowserLogoutWait = 2;
                 }
@@ -177,7 +180,7 @@ namespace VKDrive
 
                 if (locationURL.Length >= blockedURL.Length && locationURL.Substring(0, blockedURL.Length) == blockedURL)
                 {
-                    MessageBox.Show("ВКонтакте рассказал мне страшную историю: общий смысл сводится к тому что тебе нужно зайти на http://vk.com/", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show("ВКонтакте рассказал мне страшную историю: общий смысл сводится к тому что тебе нужно зайти на https://vk.com/", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     this.Close();
                     return;
                 }

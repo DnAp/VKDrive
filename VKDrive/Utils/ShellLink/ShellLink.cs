@@ -11,7 +11,7 @@ namespace vbAccelerator.Components.Shell
 	/// <summary>
 	/// Summary description for ShellLink.
 	/// </summary>
-	public class ShellLink : IDisposable
+	public sealed class ShellLink : IDisposable
 	{
 		#region ComInterop for IShellLink
 

@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace VKDrive
 {
-    class DB
+    class DB : IDisposable
     {
         public SQLiteConnection SQLite;
         private sealed class SingletonCreator
@@ -49,16 +49,23 @@ namespace VKDrive
 
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2100:Проверка запросов SQL на уязвимости безопасности")]
         public SQLiteDataReader Execute(string textCommand)
         {
-            SQLiteCommand command = new SQLiteCommand(SQLite);
+            SQLiteCommand command = new SQLiteCommand(textCommand, SQLite);
             //Console.WriteLine(textCommand);
-            command.CommandText = textCommand;
-            command.CommandType = CommandType.Text;
+            //command.CommandText = textCommand;
+            //command.CommandType = CommandType.Text;
             
-
             return command.ExecuteReader();
-            
+        }
+
+        public void Dispose()
+        {
+            if (SQLite != null)
+            {
+                SQLite.Close();
+            }
         }
     }
 }

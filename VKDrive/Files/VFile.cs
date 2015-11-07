@@ -28,6 +28,12 @@ namespace VKDrive.Files
             
         }
 
+        public string toString()
+        {
+            return base.ToString() + " " + FileName;
+        }
+
+
 
         public static string clearName(string name)
         {

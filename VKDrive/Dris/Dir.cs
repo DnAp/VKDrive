@@ -12,11 +12,13 @@ namespace VKDrive.Dris
 {
     public abstract class Dir
     {
-        public Dictionary<string, object> Directory = new Dictionary<string, object>();
+        public Dictionary<string, object> Directory;
         public Folder RootNode;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
         public Dir()
         {
+            Directory = new Dictionary<string, object>();
             _LoadRootNode();
         }
 
@@ -78,12 +80,7 @@ namespace VKDrive.Dris
 
 
                     //currentNode = currentNode.ChildNodes.First(value => value.Name == dirName);
-                    currentNode = ((Folder)currentNode).Childs.Find(
-                        delegate(VFile curFileNode)
-                        {
-                            return curFileNode.FileName == dirName;
-                        }
-                    );
+                    currentNode = ((Folder)currentNode).findInChilds(dirName);
                     if (currentNode == null)
                     {
                         Console.WriteLine("Не нашел: " + pathString);

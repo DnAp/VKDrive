@@ -14,6 +14,7 @@ namespace VKDrive.Files
     class Settings : VFile
     {
         static string SettingsLnk = null;
+        static protected Object SettingsLnkLock = new Object();
         static ushort SettingsCount = 0;
         
         public Settings(string name)
@@ -23,7 +24,7 @@ namespace VKDrive.Files
             if (SettingsLnk == null)
             {
                 SettingsLnk = Path.GetTempFileName();
-                lock (SettingsLnk)
+                lock (SettingsLnkLock)
                 {
                     using (ShellLink shortcut = new ShellLink())
                     {
@@ -58,7 +59,7 @@ namespace VKDrive.Files
                 readBytes = 0;
                 return Dokan.DokanNet.DOKAN_SUCCESS;
             }
-            lock (SettingsLnk)
+            lock (SettingsLnkLock)
             {
                 FileStream stream = new FileStream(SettingsLnk, FileMode.Open);
 

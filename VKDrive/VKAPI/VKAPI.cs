@@ -29,6 +29,7 @@ namespace VKDrive.VKAPI
         private static VKAPI instance;
 
         private AutoResetEvent resetEvent = new AutoResetEvent(false);
+        
         private static ILog Log = LogManager.GetLogger("VKAPI");
 
         private VKAPI()
@@ -100,6 +101,7 @@ namespace VKDrive.VKAPI
                 }
                 if(qList.Count == 0)
                 {
+                    resetEvent.Set();
                     continue;
                 }
                 executeQuery += "0];";
@@ -108,7 +110,7 @@ namespace VKDrive.VKAPI
                 var executeAPIQuery = new APIQuery("execute", param, VKAPILibrary.JSON);
 
                 string jsonSrc = VKAPILibrary.Instance.execute(executeAPIQuery);
-                Console.WriteLine(jsonSrc);
+                //Console.WriteLine(jsonSrc);
                 JObject jObject = JObject.Parse(jsonSrc);
                 
                 TryThrowException(jObject.GetValue("error"));

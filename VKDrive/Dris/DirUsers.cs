@@ -1,8 +1,10 @@
 ﻿using Dokan;
+using log4net;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
@@ -14,6 +16,8 @@ namespace VKDrive.Dris
 {
     class DirUsers : Dir
     {
+        private readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
         const string STORAGE_KEY = "DirUsers";
         public override void _LoadRootNode()
         {
@@ -24,6 +28,7 @@ namespace VKDrive.Dris
 
         public override bool _LoadFile(Files.Folder file)
         {
+            Log.Debug("_LoadFile " + file.toString());
             if (file.Property["type"] == "friends.getLists")
             {
                 JObject apiResult = (JObject)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("friends.getLists"));
@@ -118,8 +123,7 @@ namespace VKDrive.Dris
 
                 if (storageUids.Length > 0)
                 {
-                    JObject apiResult = (JObject)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("users.get", new Dictionary<string, string>() { { "uids", storageUids.Replace('\n', ',') } }));
-                    JArray items = (JArray)apiResult.GetValue("items");
+                    JArray items = (JArray)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("users.get", new Dictionary<string, string>() { { "user_ids", storageUids.Replace('\n', ',') } }));
                     foreach (JObject item in items)
                     {
                         file.ChildsAdd(CreateUserFolder(item.ToObject<SerializationObject.User>()));
@@ -131,12 +135,12 @@ namespace VKDrive.Dris
                 System.Collections.ArrayList files = new System.Collections.ArrayList();
 
                 AudioApi.executeGetAlbums(new Dictionary<string, string>(){
-				        {"uid", file.Property["uid"]}
+				        {"owner_id", file.Property["uid"]}
 			        }, file.Childs);
             }
             else if (file.Property["type"] == "photos.getAlbums")
             {
-                JObject apiResult = (JObject)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("photos.getAlbums", new Dictionary<string, string>() { { "uid", file.Property["uid"] } }));
+                JObject apiResult = (JObject)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("photos.getAlbums", new Dictionary<string, string>() { { "owner_id", file.Property["uid"] } }));
                 JArray items = (JArray)apiResult.GetValue("items");
 
                 Folder curFolder;
@@ -157,7 +161,7 @@ namespace VKDrive.Dris
             else if (file.Property["type"] == "audio.getInAlbum")
             {
                 AudioApi.loadMP3(new Dictionary<string, string>(){
-				        {"uid", file.Property["uid"]},
+				        {"owner_id", file.Property["uid"]},
                         { "album_id", file.Property["album_id"]}
 			        }, file.Childs);
             }
@@ -165,7 +169,7 @@ namespace VKDrive.Dris
             {
                 JObject apiResult = (JObject)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery(
                         "photos.get",
-                        new Dictionary<string, string>() { { "uid", file.Property["uid"] }, { "aid", file.Property["aid"] } }
+                        new Dictionary<string, string>() { { "owner_id", file.Property["uid"] }, { "album_id", file.Property["aid"] } }
                     ));
 
                 Photo photo;

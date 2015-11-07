@@ -42,7 +42,7 @@ namespace VKDrive.API
                 JObject apiRequest = (JObject)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("audio.getAlbums", paramSend));
                 
                 JArray items = (JArray)apiRequest.GetValue("items");
-                if (items.Count > 0)
+                if (items!=null && items.Count > 0)
                 {
                     max = apiRequest.GetValue("count").ToObject<int>();
                     foreach (JToken item in items)
@@ -58,14 +58,7 @@ namespace VKDrive.API
                         {
                             fileNode.Property.Add("type", "audio.getInAlbum");
                             fileNode.Property.Add("album_id", album.Id.ToString());
-                            if (param.ContainsKey("uid"))
-                            {
-                                fileNode.Property.Add("uid", param["uid"]);
-                            }
-                            else
-                            {
-                                fileNode.Property.Add("gid", param["gid"]);
-                            }
+                            fileNode.Property.Add("owner_id", param.ContainsKey("uid") ? param["uid"] : "-"+param["gid"]);
                         }
                         fileNode.IsLoaded = false;
                         files.Add(fileNode);
@@ -117,8 +110,7 @@ namespace VKDrive.API
         protected static int getCount(Dictionary<string, string> param)
         {
             Dictionary<string, string> p = new Dictionary<string, string>();
-            // gid, а если упадет, так тебе и нужно
-            p.Add("oid", param.ContainsKey("uid") ? param["uid"] : "-" + param["gid"]);
+            p.Add("owner_id", param["owner_id"]);
             return VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("audio.getCount", p)).ToObject<int>();
         }
 
@@ -129,10 +121,7 @@ namespace VKDrive.API
 
         protected static void loadMP3(Dictionary<string, string> param, IList<VFile> files, Dictionary<int, Folder> albumsKeyValue, int audioCount)
         {
-            
             // второй уровень
-            string mp3Name;
-            int albimId;
             int countOnStep = 500; // Сколько забирать за шаг
             int pageCount = Convert.ToInt32(Math.Ceiling(Convert.ToDecimal(audioCount) / countOnStep));
 

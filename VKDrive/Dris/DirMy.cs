@@ -38,7 +38,7 @@ namespace VKDrive.Dris
             if (file.Property["type"] == "AudioApi.executeGetAlbums")
             {
                 AudioApi.executeGetAlbums(new Dictionary<string, string>(){
-				        {"uid", VKAPI.VKAPILibrary.Instance.UserID.ToString()}
+				        {"owner_id", VKAPI.VKAPILibrary.Instance.UserID.ToString()}
 			        }, file.Childs);
             }
             else if (file.Property["type"] == "photos.getAlbums")
@@ -62,13 +62,13 @@ namespace VKDrive.Dris
             else if (file.Property["type"] == "audio.getInAlbum")
             {
                 AudioApi.loadMP3(new Dictionary<string, string>(){
-				        {"uid", file.Property["uid"]},
+				        {"owner_id", file.Property["uid"]},
                         { "album_id", file.Property["album_id"]}
 			        }, file.Childs);
             }
             else if (file.Property["type"] == "photos.get")
             {
-                JObject apiResult = (JObject)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("photos.get", new Dictionary<string,string>(){ {"aid", file.Property["aid"]} }));
+                JObject apiResult = (JObject)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("photos.get", new Dictionary<string,string>(){ { "album_id", file.Property["aid"]} }));
 
                 Photo photo;
                 JArray items = (JArray)apiResult.GetValue("items");
@@ -88,7 +88,7 @@ namespace VKDrive.Dris
                     // todo сделать перехват фатала.
                     System.Threading.Thread.Sleep(100);
                 }
-                // Подождать не вышло, выводим файл и инфой что нужно ждать
+                // Подождать не вышло, выводим файл с инфой что нужно ждать
             }
             return true;
         }

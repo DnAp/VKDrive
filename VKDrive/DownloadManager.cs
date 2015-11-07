@@ -19,7 +19,8 @@ namespace VKDrive
     {
         protected int MaxBufferBlock;
         protected int DownloadBlockSize;
-        System.IO.FileStream FStream;
+        protected System.IO.FileStream FStream;
+        protected Object FStreamLock;
         protected string CacheFileName;
 
         const int STATUS_PROCESS = 1;
@@ -34,6 +35,7 @@ namespace VKDrive
             CacheFileName = System.IO.Path.GetTempFileName();
             Console.WriteLine(CacheFileName);
             FStream = System.IO.File.Create(CacheFileName);
+            FStreamLock = new Object();
         }
 
         ~DownloadManager()
@@ -69,7 +71,7 @@ namespace VKDrive
             #region Получение первичной информации
             try
             {
-                lock (finfo)
+                lock (FStreamLock)
                 {
                     // кажись это нафик не нужный код
                     if (finfo.Length == 0)
@@ -175,7 +177,7 @@ namespace VKDrive
 
             for (int blockId = blockIdStart; blockId <= blockIdEnd; blockId++)
             {
-                lock (FStream)
+                lock (FStreamLock)
                 {
                     
                     int count;
@@ -302,7 +304,7 @@ namespace VKDrive
                 if (maxPosition < byte_offset)
                     maxPosition = byte_offset;
             }
-            lock (DM.FStream)
+            lock (DM.FStreamLock)
             {
                 Console.WriteLine("Файл занимает: " + DM.FStream.Length + ". Максимальная позиция: " + (maxPosition + DM.DownloadBlockSize));
                 if (DM.FStream.Length < maxPosition + DM.DownloadBlockSize)
@@ -336,7 +338,7 @@ namespace VKDrive
                 {
                     read = stream.Read(bufferWritter, 0, bufferWritter.Length);
                     
-                    lock (DM.FStream)
+                    lock (DM.FStreamLock)
                     {
 
                         DM.FStream.Position = positionBlock[blockId] + downloaded;

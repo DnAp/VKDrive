@@ -17,7 +17,7 @@ namespace VKDrive
         public static int status = 1;
         public static MainFS mainFS;
 
-        public static bool test()
+        public static bool test() // todo Переделать на установлен ли драйвер?
         {
             return File.Exists(Environment.GetFolderPath(Environment.SpecialFolder.System) + "\\dokan.dll");
         }
@@ -67,15 +67,7 @@ namespace VKDrive
                 }
                 try
                 {
-                    if (Environment.OSVersion.Version.Major == 6 && Environment.OSVersion.Version.Minor >= 2) // Win8/Win2012Server или выше
-                    {
-                        // Ставим на приложение флаг запуска с симуляцией win7
-                        string installerName = Directory.GetCurrentDirectory() + "\\Resurces\\DokanInstall_0.6.0_auto.exe";
-                        Microsoft.Win32.Registry.SetValue(@"HKEY_CURRENT_USER\Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers", installerName, "WIN7RTM");
-                        // HKEY_CURRENT_USER\Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers : WIN7RTM
-                    }
-
-                    Process pr = Process.Start("Resurces\\DokanInstall_0.6.0_auto.exe", "/S");
+                    Process pr = Process.Start("Resurces\\DokanInstall_0.8.0_redist-RC2.exe", "/S");
                     pr.WaitForExit();
                     pr.Close();
                 }
@@ -122,9 +114,9 @@ namespace VKDrive
             char mountPoint = Properties.Settings.Default.MountPoint;
             opt.MountPoint = mountPoint + ":\\";
             opt.DebugMode = false;
-            opt.UseStdErr = false;
+            opt.UseStdErr = true;
 
-            opt.NetworkDrive = false;
+            opt.NetworkDrive = true;
             opt.VolumeLabel = "VKDrive";
             opt.UseKeepAlive = false;
 

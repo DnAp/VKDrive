@@ -1,25 +1,34 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using VKDrive.Utils;
 
 namespace VKDrive.Files
 {
     public class Folder : VFile
     {
+        public BlockingList<VFile> Childs;
+
         private bool _IsLoader = false;
         public bool IsLoaded
         {
             set
             {
-                _IsLoader = value;
-                if (value == true)
+                if (_IsLoader == false && value == true)
                 {
-                    if (Childs.Count > 0 && Childs[0].FileName == "Идет загрузка.txt")
+                    _IsLoader = value;
+                    if (Childs.Count > 0)
                     {
-                        Childs.RemoveAt(0);
+                        VFile loaderFile = Childs.First();
+                        if (loaderFile.FileName == "Идет загрузка.txt")
+                        {
+                            Childs.Remove(loaderFile);
+                        }
                     }
                     GroupFile();
                 }
@@ -30,7 +39,6 @@ namespace VKDrive.Files
             }
         }
 
-        public List<VFile> Childs;
         /// <summary>
         /// Дополнительная информация
         /// </summary>
@@ -38,17 +46,28 @@ namespace VKDrive.Files
         public Folder(string name) : base(name)
         {
             Attributes = System.IO.FileAttributes.Directory;
-            Childs = new List<VFile>() { new PlainText("Идет загрузка.txt") };
+            Childs = new BlockingList<VFile>() { new PlainText("Идет загрузка.txt") };
+        }
+
+        public new string toString()
+        {
+            return base.ToString() + " " + Property.Select(s => s.ToString());
+        }
+
+        public VFile findInChilds(string name)
+        {
+            foreach(VFile curFile in Childs) {
+                if (curFile.FileName == name)
+                    return curFile;
+            }
+            return null;
         }
 
         public void ChildsAdd(VFile file)
         {
-            VFile cp;
             string name = file.FileName;
-            cp = Childs.Find(delegate(VFile curFileNode)
-            {
-                return curFileNode.FileName == name;
-            });
+            VFile cp = this.findInChilds(name);
+            
             if (cp != null)
             {
                 int i = 0;
@@ -67,10 +86,7 @@ namespace VKDrive.Files
                         name = file.FileName + "(" + i.ToString() + ")";
                     }
 
-                    cp = Childs.Find(delegate(VFile curFileNode)
-                    {
-                        return curFileNode.FileName == name;
-                    });
+                    cp = this.findInChilds(name);
                 }
                 file.FileName = name;
             }
@@ -80,34 +96,37 @@ namespace VKDrive.Files
 
         private void GroupFile()
         {
-            if (Childs.Count > 100)
+            if (Childs.Count > 500)
             {
                 var maxFile = 500;
-                if (Childs[0].GetType() == typeof(Folder))
+                /*if (Childs.First().GetType() == typeof(Folder))
                 {
                     maxFile = 100;
                 }
                 else if (Childs.Count < maxFile)
                 {
                     return;
-                }
-                
-                List<VFile> replace = new List<VFile>();
-                List<VFile> copy = Childs;
+                }*/
+
+                BlockingList<VFile> replaceChilds = new BlockingList<VFile>();
+                List<VFile> copy = Childs.Select(item => item).ToList(); // clone list
                 copy.Sort(delegate(VFile a, VFile b) { return a.FileName.CompareTo(b.FileName); });
                 Folder fNode;
-                for (int i = 0; i < (copy.Count / maxFile); i++)
+                for (int i = 0; i <= (copy.Count / maxFile); i++)
                 {
                     int residue = copy.Count - (i * maxFile); // остаток
                     residue = residue < maxFile ? residue : maxFile;
-                    List<VFile> tmp = copy.GetRange(i * maxFile, residue);
-                    fNode = new Folder(tmp[0].FileName[0].ToString() + ".." + tmp[residue - 1].FileName[0].ToString());
-                    fNode.Childs.AddRange(tmp);
+                    IList<VFile> tmp = copy.GetRange(i * maxFile, residue);
+                    fNode = new Folder(tmp[0].FileName.Substring(0, 1) + ".." + tmp[residue - 1].FileName.Substring(0, 1));
+
+                    foreach (VFile curFile in tmp)
+                    {
+                        fNode.Childs.Add(curFile);
+                    }
                     fNode.IsLoaded = true;
-                    replace.Add(fNode);
+                    replaceChilds.Add(fNode);
                 }
-                Childs.Clear();
-                Childs = replace;
+                Childs = replaceChilds;
             }
         }
 

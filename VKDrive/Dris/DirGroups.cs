@@ -68,7 +68,7 @@ namespace VKDrive.Dris
                 try
                 {
                     AudioApi.executeGetAlbums(new Dictionary<string, string>(){
-				        {"gid", file.Property["gid"]}
+				        {"owner_id", "-"+file.Property["gid"]}
 			        }, file.Childs);
                 }
                 catch (Exception e)
@@ -194,7 +194,6 @@ namespace VKDrive.Dris
             {
                 return DokanNet.DOKAN_ERROR;
             }
-            JObject apiResult;
             JArray items;
             try
             {
