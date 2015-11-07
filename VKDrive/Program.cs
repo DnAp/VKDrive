@@ -11,7 +11,7 @@ namespace VKDrive
 {
     static class Program
     {
-        public static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        
         /// <summary>
         /// Главная точка входа для приложения.
         /// </summary>

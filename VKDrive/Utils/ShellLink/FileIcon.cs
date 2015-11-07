@@ -44,7 +44,7 @@ namespace vbAccelerator.Components.Shell
 		private const int FORMAT_MESSAGE_FROM_SYSTEM = 0x1000;
 		private const int FORMAT_MESSAGE_IGNORE_INSERTS = 0x200;
 		private const int FORMAT_MESSAGE_MAX_WIDTH_MASK = 0xFF;
-		[DllImport("kernel32")]
+        [DllImport("kernel32")]
 		private extern static int FormatMessage (
 			int dwFlags, 
 			IntPtr lpSource, 

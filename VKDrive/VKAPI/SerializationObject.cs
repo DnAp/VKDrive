@@ -31,8 +31,6 @@ namespace VKDrive.VKAPI
             public int Id { get; set; }
             [JsonProperty("owner_id")]
             public int OwnerId { get; set; }
-            [JsonProperty("aid")]
-            public int AId { get; set; }
             [JsonProperty("title")]
             public string Title { get; set; }
             [JsonProperty("artist")]

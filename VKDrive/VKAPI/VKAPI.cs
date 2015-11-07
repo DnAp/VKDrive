@@ -21,7 +21,7 @@ namespace VKDrive.VKAPI
     }
 
 
-    class VKAPI
+    class VKAPI : IDisposable
     {
         const int TIMEOUT = 1000 / 3;
         ConcurrentQueue<APIQuery> concurrentQueue = new ConcurrentQueue<APIQuery>();
@@ -148,6 +148,11 @@ namespace VKDrive.VKAPI
         public void Stop()
         {
             isAlive = false;
+        }
+
+        public void Dispose()
+        {
+            resetEvent.Dispose();
         }
     }
 }

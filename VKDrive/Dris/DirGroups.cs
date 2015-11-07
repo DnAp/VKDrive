@@ -30,7 +30,7 @@ namespace VKDrive.Dris
                 file.ChildsAdd(
                     new Files.SettingsXls(
                         "VKDirvePathData.xml", "Добавление группы",
-                        "Введите ссылку на группу или ее идентификатор. Например http://vk.com/club47348352",
+                        "Введите ссылку на группу или ее идентификатор. Например https://vk.com/club47348352",
                         "Не удалось найти такую группу.",
                         "Такая группа уже существует."
                     ));
@@ -173,7 +173,7 @@ namespace VKDrive.Dris
             curFolder.ChildsAdd(
                 new PlainText(
                     "Открыть в браузере.url",
-                    PlainText.InternetShortcut("http://vk.com/club" + gid)
+                    PlainText.InternetShortcut("https://vk.com/club" + gid)
                 )
             );
 
@@ -183,9 +183,9 @@ namespace VKDrive.Dris
 
         public override int CreateDirectory(Folder file, string filename, DokanFileInfo info)
         {
-            // http://vk.com/club47348352
-            // http://vk.com/vkdriveapp
-            // http://vkontakte.ru/club47348352
+            // https://vk.com/club47348352
+            // https://vk.com/vkdriveapp
+            // https://vkontakte.ru/club47348352
             
             filename = Regex.Replace(filename, @"http(s|)://.*/", "");
             // хавает любое занчение: 47348352, club47348352, vkdriveapp

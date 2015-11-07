@@ -38,7 +38,7 @@ namespace VKDrive.VKAPI
         private string jsonEncode(string val)
         {
             // simple json encode \ => \\  " => \"
-            return "\"" + val.Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
+            return "\"" + val.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\n", "\\n") + "\"";
         }
 
         override public string ToString()

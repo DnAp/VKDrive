@@ -1,12 +1,10 @@
 ﻿using Dokan;
+using log4net;
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
+using System.Reflection;
 using System.Threading;
-using System.Threading.Tasks;
 
 
 namespace VKDrive
@@ -16,6 +14,8 @@ namespace VKDrive
         public static Thread DokanThread;
         public static int status = 1;
         public static MainFS mainFS;
+
+        private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         public static bool test() // todo Переделать на установлен ли драйвер?
         {
@@ -67,7 +67,7 @@ namespace VKDrive
                 }
                 try
                 {
-                    Process pr = Process.Start("Resurces\\DokanInstall_0.8.0_redist-RC2.exe", "/S");
+                    Process pr = Process.Start("Resurces\\DokanInstall_0.8.0-RC2.exe", "/S");
                     pr.WaitForExit();
                     pr.Close();
                 }
@@ -109,8 +109,6 @@ namespace VKDrive
         
             DokanOptions opt = new DokanOptions();
 
-
-
             char mountPoint = Properties.Settings.Default.MountPoint;
             opt.MountPoint = mountPoint + ":\\";
             opt.DebugMode = false;
@@ -126,26 +124,26 @@ namespace VKDrive
             switch (status)
             {
                 case DokanNet.DOKAN_DRIVE_LETTER_ERROR:
-                    Console.WriteLine("Drvie letter error");
+                    Log.Fatal("Drvie letter error");
                     break;
                 case DokanNet.DOKAN_DRIVER_INSTALL_ERROR:
                     installLib();
-                    Console.WriteLine("Driver install error");
+                    Log.Fatal("Driver install error");
                     break;
                 case DokanNet.DOKAN_MOUNT_ERROR:
-                    Console.WriteLine("Mount error");
+                    Log.Fatal("Mount error");
                     break;
                 case DokanNet.DOKAN_START_ERROR:
-                    Console.WriteLine("Start error");
+                    Log.Fatal("Start error");
                     break;
                 case DokanNet.DOKAN_ERROR:
-                    Console.WriteLine("Unknown error");
+                    Log.Fatal("Unknown error");
                     break;
                 case DokanNet.DOKAN_SUCCESS:
-                    Console.WriteLine("Success");
+                    Log.Info("Start success");
                     break;
                 default:
-                    Console.WriteLine("Unknown status: %d", status);
+                    Log.Fatal("Unknown status: "+ status);
                     break;
             }
             

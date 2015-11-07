@@ -116,7 +116,7 @@ namespace VKDrive.Dris
                 file.ChildsAdd(
                     new Files.SettingsXls(
                         "VKDirvePathData.xml", "Добавление людей",
-                        "Введите ссылку на человека или номер его страницы. Например http://vk.com/durov",
+                        "Введите ссылку на человека или номер его страницы. Например https://vk.com/durov",
                         "Никого не удалось найти.",
                         "Такой человек уже есть в этом списке."
                     ));
@@ -216,7 +216,7 @@ namespace VKDrive.Dris
             curFolder.ChildsAdd(
                 new PlainText(
                     "Открыть в браузере.url", 
-                    PlainText.InternetShortcut("http://vk.com/id" + uid)
+                    PlainText.InternetShortcut("https://vk.com/id" + uid)
                 )
             );
             
@@ -226,9 +226,9 @@ namespace VKDrive.Dris
 
         public override int CreateDirectory(Folder file, string filename, DokanFileInfo info)
         {
-            // http://vk.com/id1
-            // http://vk.com/durov
-            // http://vkontakte.ru/id1
+            // https://vk.com/id1
+            // https://vk.com/durov
+            // https://vkontakte.ru/id1
 
             filename = System.Text.RegularExpressions.Regex.Replace(filename, @"http(s|)://.*/", "");
             // хавает любое занчение: 47348352, club47348352, vkdriveapp

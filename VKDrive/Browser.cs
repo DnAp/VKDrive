@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using log4net;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -6,6 +7,7 @@ using System.Data;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -18,16 +20,19 @@ namespace VKDrive
     {
         int webBrowserLogoutWait = 0;
 
+
+        public static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
         public Browser()
         {
-            Program.Log.Info("Start vkdrive");
+            Log.Info("Start vkdrive");
 
             
             bool mutexWasCreated;
             System.Threading.Mutex mutex = new System.Threading.Mutex(true, "VKDrive", out mutexWasCreated);
             if (!mutexWasCreated)
             {
-                Program.Log.Warn("Double start! Exit.");
+                Log.Warn("Double start! Exit.");
                 Environment.Exit(0);
                 return;
             }
@@ -37,10 +42,10 @@ namespace VKDrive
             // Важная процедура проверки установленности dokan
             if (!DokanInit.test())
             {
-                Program.Log.Warn("Dokan not installed");
+                Log.Warn("Dokan not installed");
                 if (DokanInit.installLib() == 0)
                 {
-                    Program.Log.Warn("Dokan fail install?");
+                    Log.Warn("Dokan fail install?");
                     notifyIcon1.Visible = false;
                     System.Environment.Exit(0);
                     return;
@@ -146,13 +151,13 @@ namespace VKDrive
         {
             this.IsVisibilityChangeAllowed = true;
 
-            Program.Log.Debug("Document load completed: "+ webBrowser1.Url.AbsoluteUri);
+            Log.Debug("Document load completed: "+ webBrowser1.Url.AbsoluteUri);
             if (webBrowserLogoutWait == 1)
             {
                 HtmlElement logout = webBrowser1.Document.GetElementById("logout_link");
                 if (logout != null)
                 {
-                    Program.Log.Debug("Document load completed have logout lonk: " + logout.GetAttribute("href"));
+                    Log.Debug("Document load completed have logout lonk: " + logout.GetAttribute("href"));
                     webBrowser1.Url = new Uri(logout.GetAttribute("href"));
                     webBrowserLogoutWait = 2;
                 }
@@ -240,8 +245,8 @@ namespace VKDrive
             if (MessageBox.Show("Точно выйти из аккаунта ВКонтакте?", "Внимание", MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
             {
                 webBrowserLogoutWait = 1;
-                webBrowser1.Url = new Uri("http://vk.com");
-                //DokanInit.end();
+                webBrowser1.Url = new Uri("https://vk.com");
+                DokanInit.end();
             }
         }
 

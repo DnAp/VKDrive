@@ -10,7 +10,8 @@ using VKDrive.Files;
 using VKDrive.Utils;
 using Dokan;
 using System.Data.SQLite;
-
+using log4net;
+using System.Reflection;
 
 namespace VKDrive
 {
@@ -26,6 +27,8 @@ namespace VKDrive
         const int STATUS_PROCESS = 1;
         const int STATUS_OK = 2;
         const int STATUS_ERROR = 3;
+
+        private readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         protected DownloadManager()
         {
@@ -67,7 +70,7 @@ namespace VKDrive
 
         public int getBlock(Download finfo, byte[] buffer, ref uint readBytes, long offset)
         {
-            Console.WriteLine("DM: c " + offset + " читать " + buffer.Length);
+            Log.Debug("DM: c " + offset + " читать " + buffer.Length);
             #region Получение первичной информации
             try
             {
@@ -121,7 +124,7 @@ namespace VKDrive
             // Console.WriteLine("End block" + endBlockToRead);
             try
             {
-                Console.WriteLine("Readed: " + blockIdStart + ".." + blockIdEnd);
+                Log.Debug("Readed: " + blockIdStart + ".." + blockIdEnd);
                 startBlockDownload(finfo, blockIdStart, blockIdEnd);
             }
             catch (Exception)
@@ -168,7 +171,7 @@ namespace VKDrive
                 counter++;
                 if (counter == 20 * (blockIdEnd - blockIdStart + 1))
                 {
-                    Console.WriteLine("Длительное ожидание файла");
+                    Log.Warn("Длительное ожидание файла");
                 }
                     
                 Thread.Sleep(Properties.Settings.Default.DownloadSleepTimeout);
@@ -206,7 +209,7 @@ namespace VKDrive
                             count = positionBlock[blockId][0];
                         }
                     }
-                    Console.WriteLine("Переписываем из файла с " + FStream.Position + ", блок длинной " + count);
+                    Log.Debug("Переписываем из файла с " + FStream.Position + ", блок длинной " + count);
                     readBytes += (uint)FStream.Read(
                         buffer,
                         Convert.ToInt32(readBytes),
@@ -215,7 +218,7 @@ namespace VKDrive
                 }
 
             }
-            Console.WriteLine("Итого отдали " + readBytes + " из " + buffer.Length + " запрашиваемых");
+            Log.Debug("Итого отдали " + readBytes + " из " + buffer.Length + " запрашиваемых");
 
             return DokanNet.DOKAN_SUCCESS;
         }

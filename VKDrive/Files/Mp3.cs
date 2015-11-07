@@ -1,9 +1,8 @@
-﻿using Newtonsoft.Json.Linq;
+﻿using log4net;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+using System.Reflection;
 using System.Xml.Linq;
 using VKDrive.VKAPI;
 
@@ -15,14 +14,15 @@ namespace VKDrive.Files
         public int AID = 0;
         public short Duration = 0;
 
-        public Mp3(string name) : base(name) { }
+        private readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         public Mp3(SerializationObject.Audio curAudio) : base("")
         {
             FileName = Mp3.EscapeFileName(curAudio.Artist + " - " + curAudio.Title) + ".mp3";
             Url = curAudio.Url;
             UID = curAudio.OwnerId;
-            AID = curAudio.AId;
+            AID = curAudio.Id;
+            Log.Debug("Make mp3 " + FileName + " : "+Url);
         }
 
         public override int ReadFile(
