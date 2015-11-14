@@ -9,7 +9,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using VKDrive.Files;
 using VKDrive.VKAPI;
@@ -27,7 +26,6 @@ namespace VKDrive
         {
             Log.Info("Start vkdrive");
 
-            
             bool mutexWasCreated;
             System.Threading.Mutex mutex = new System.Threading.Mutex(true, "VKDrive", out mutexWasCreated);
             if (!mutexWasCreated)
@@ -149,78 +147,84 @@ namespace VKDrive
 
         private void webBrowser1_DocumentCompleted(object sender, WebBrowserDocumentCompletedEventArgs e)
         {
-            this.IsVisibilityChangeAllowed = true;
+            try {
+                this.IsVisibilityChangeAllowed = true;
 
-            Log.Debug("Document load completed: "+ webBrowser1.Url.AbsoluteUri);
-            if (webBrowserLogoutWait == 1)
-            {
-                HtmlElement logout = webBrowser1.Document.GetElementById("logout_link");
-                if (logout != null)
+                Log.Debug("Document load completed: " + webBrowser1.Url.AbsoluteUri);
+                if (webBrowserLogoutWait == 1)
                 {
-                    Log.Debug("Document load completed have logout lonk: " + logout.GetAttribute("href"));
-                    webBrowser1.Url = new Uri(logout.GetAttribute("href"));
-                    webBrowserLogoutWait = 2;
+                    HtmlElement logout = webBrowser1.Document.GetElementById("logout_link");
+                    if (logout != null)
+                    {
+                        Log.Debug("Document load completed have logout lonk: " + logout.GetAttribute("href"));
+                        webBrowser1.Url = new Uri(logout.GetAttribute("href"));
+                        webBrowserLogoutWait = 2;
+                    }
                 }
-            }
-            else if (webBrowserLogoutWait == 2 && webBrowser1.Url.AbsoluteUri.IndexOf("login") > -1)
-            {
-                webBrowserLogoutWait = 0;
-                toAuthVKPage();
-                this.Show();
-            }
-            else
-            {
-                /// Первый запуск не авторизовывает приложение
-                /// https://oauth.vk.com/authorize?client_id=1234&display=popup&response_type=token&scope=audio,friends&redirect_uri=http%3A%2F%2Foauth.vk.com%2Fblank.html
-                /// и ожидаем ввода логина
-                /// Когда вход осуществлен переадресация происходит заголовками и мы сразу получаем
-                /// https://oauth.vk.com/blank.html
-                /// Прикинь, если аккаунт в вк заблокировали то показывается
-                /// https://oauth.vk.com/login?act=blocked
-                ///
-
-                string locationURL = webBrowser1.Url.AbsoluteUri;
-                string successURL = "https://oauth.vk.com/blank.html";
-                string blockedURL = "https://oauth.vk.com/login?act=blocked";
-
-                if (locationURL.Length >= blockedURL.Length && locationURL.Substring(0, blockedURL.Length) == blockedURL)
+                else if (webBrowserLogoutWait == 2 && webBrowser1.Url.AbsoluteUri.IndexOf("login") > -1)
                 {
-                    MessageBox.Show("ВКонтакте рассказал мне страшную историю: общий смысл сводится к тому что тебе нужно зайти на https://vk.com/", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                    this.Close();
-                    return;
-                }
-
-                if (locationURL.Length < successURL.Length || locationURL.Substring(0, successURL.Length) != successURL)
-                {
+                    webBrowserLogoutWait = 0;
+                    toAuthVKPage();
                     this.Show();
-                    return;
                 }
-                // все прошло ок
-                this.Hide();
-
-                string fullString = (string)locationURL.Split('#').GetValue(1);
-                string[] paramSrc = fullString.Split('&');
-
-                Dictionary<string, string> sessionData = new Dictionary<string, string>();
-                string[] curP;
-                for (int i = 0; i < paramSrc.Length; i++)
+                else
                 {
-                    curP = paramSrc[i].Split('=');
-                    sessionData.Add(curP[0], curP[1]);
+                    /// Первый запуск не авторизовывает приложение
+                    /// https://oauth.vk.com/authorize?client_id=1234&display=popup&response_type=token&scope=audio,friends&redirect_uri=http%3A%2F%2Foauth.vk.com%2Fblank.html
+                    /// и ожидаем ввода логина
+                    /// Когда вход осуществлен переадресация происходит заголовками и мы сразу получаем
+                    /// https://oauth.vk.com/blank.html
+                    /// Прикинь, если аккаунт в вк заблокировали то показывается
+                    /// https://oauth.vk.com/login?act=blocked
+                    ///
+
+                    string locationURL = webBrowser1.Url.AbsoluteUri;
+                    string successURL = "https://oauth.vk.com/blank.html";
+                    string blockedURL = "https://oauth.vk.com/login?act=blocked";
+
+                    if (locationURL.Length >= blockedURL.Length && locationURL.Substring(0, blockedURL.Length) == blockedURL)
+                    {
+                        MessageBox.Show("ВКонтакте рассказал мне страшную историю: общий смысл сводится к тому что тебе нужно зайти на https://vk.com/", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        this.Close();
+                        return;
+                    }
+
+                    if (locationURL.Length < successURL.Length || locationURL.Substring(0, successURL.Length) != successURL)
+                    {
+                        this.Show();
+                        return;
+                    }
+                    // все прошло ок
+                    this.Hide();
+
+                    string fullString = (string)locationURL.Split('#').GetValue(1);
+                    string[] paramSrc = fullString.Split('&');
+
+                    Dictionary<string, string> sessionData = new Dictionary<string, string>();
+                    string[] curP;
+                    for (int i = 0; i < paramSrc.Length; i++)
+                    {
+                        curP = paramSrc[i].Split('=');
+                        sessionData.Add(curP[0], curP[1]);
+                    }
+
+                    VKAPI.VKAPILibrary api = VKAPI.VKAPILibrary.Instance;
+                    api.AppID = Properties.Settings.Default.VKAppId;
+                    api.Expire = Convert.ToInt32(sessionData["expires_in"]);
+                    api.UserID = Convert.ToInt32(sessionData["user_id"]);
+                    api.AccessTokien = (string)sessionData["access_token"];
+
+                    JArray apiResult = (JArray)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("users.get", new Dictionary<string, string>() { { "uids", sessionData["user_id"] } }));
+                    SerializationObject.User user = apiResult[0].ToObject<SerializationObject.User>();
+
+                    notifyIcon1.Text = "VKDrive: " + user.FirstName + " " + user.LastName;
+
+                    DokanInit.start();
                 }
-
-                VKAPI.VKAPILibrary api = VKAPI.VKAPILibrary.Instance;
-                api.AppID = Properties.Settings.Default.VKAppId;
-                api.Expire = Convert.ToInt32(sessionData["expires_in"]);
-                api.UserID = Convert.ToInt32(sessionData["user_id"]);
-                api.AccessTokien = (string)sessionData["access_token"];
-                
-                JArray apiResult = (JArray)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("users.get", new Dictionary<string, string>() { { "uids", sessionData["user_id"] } }));
-                SerializationObject.User user = apiResult[0].ToObject<SerializationObject.User>();
-
-                notifyIcon1.Text = "VKDrive: " + user.FirstName + " " + user.LastName;
-
-                DokanInit.start();
+            }catch(Exception ex)
+            {
+                Log.Fatal("webBrowser1_DocumentCompleted exception", ex);
+                MessageBox.Show("Фатальная ошибка. "+ex.Message);
             }
         }
 
@@ -246,7 +250,7 @@ namespace VKDrive
             {
                 webBrowserLogoutWait = 1;
                 webBrowser1.Url = new Uri("https://vk.com");
-                DokanInit.end();
+                //DokanInit.end();
             }
         }
 
@@ -255,11 +259,19 @@ namespace VKDrive
         {
             // Чет не срабатывает 
             //System.Environment.Exit(0);
+            DokanInit.end();
         }
 
         private void notifyIcon1_MouseDoubleClick(object sender, MouseEventArgs e)
         {
-
+            if (DokanInit.isWorking())
+            {
+                System.Diagnostics.Process.Start("explorer", Properties.Settings.Default.MountPoint + ":\\");
+            }
+            else
+            {
+                this.Focus();
+            }
         }
 
     }

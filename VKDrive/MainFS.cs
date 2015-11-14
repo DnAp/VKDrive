@@ -25,7 +25,12 @@ namespace VKDrive
         {
             Log.Debug("Start MainFS");
             Log.Debug("Db connect");
-            DB.Instance.Connect();
+            try {
+                DB.Instance.Connect();
+            } catch(Exception e) {
+                Log.Error("Db connect fail", e);
+                throw e;
+            }
             Log.Debug("Make root tree");
             TopDirectory = new Dictionary<string, Dir>();
             TopDirectory["Моя Страница"] = new DirMy();
@@ -219,7 +224,7 @@ namespace VKDrive
             catch (Exception e)
             {
                 Log.Error(e);
-                throw e;
+                return -1;
             }
         }
 

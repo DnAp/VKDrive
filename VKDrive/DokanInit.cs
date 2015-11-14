@@ -106,47 +106,51 @@ namespace VKDrive
 
         private static void startMainFS(object obj)
         {
-        
-            DokanOptions opt = new DokanOptions();
+            try {
+                DokanOptions opt = new DokanOptions();
 
-            char mountPoint = Properties.Settings.Default.MountPoint;
-            opt.MountPoint = mountPoint + ":\\";
-            opt.DebugMode = false;
-            opt.UseStdErr = true;
+                char mountPoint = Properties.Settings.Default.MountPoint;
+                opt.MountPoint = mountPoint + ":\\";
+                opt.DebugMode = false;
+                opt.UseStdErr = true;
 
-            opt.NetworkDrive = true;
-            opt.VolumeLabel = "VKDrive";
-            opt.UseKeepAlive = false;
+                opt.NetworkDrive = true;
+                opt.VolumeLabel = "VKDrive";
+                opt.UseKeepAlive = false;
 
-            mainFS = new MainFS(mountPoint);
-            status = DokanNet.DokanMain(opt, mainFS);
+                mainFS = new MainFS(mountPoint);
+                status = DokanNet.DokanMain(opt, mainFS);
 
-            switch (status)
+                switch (status)
+                {
+                    case DokanNet.DOKAN_DRIVE_LETTER_ERROR:
+                        Log.Fatal("Drvie letter error");
+                        break;
+                    case DokanNet.DOKAN_DRIVER_INSTALL_ERROR:
+                        installLib();
+                        Log.Fatal("Driver install error");
+                        break;
+                    case DokanNet.DOKAN_MOUNT_ERROR:
+                        Log.Fatal("Mount error");
+                        break;
+                    case DokanNet.DOKAN_START_ERROR:
+                        Log.Fatal("Start error");
+                        break;
+                    case DokanNet.DOKAN_ERROR:
+                        Log.Fatal("Unknown error");
+                        break;
+                    case DokanNet.DOKAN_SUCCESS:
+                        Log.Info("Start success");
+                        break;
+                    default:
+                        Log.Fatal("Unknown status: " + status);
+                        break;
+                }
+            }catch(Exception e)
             {
-                case DokanNet.DOKAN_DRIVE_LETTER_ERROR:
-                    Log.Fatal("Drvie letter error");
-                    break;
-                case DokanNet.DOKAN_DRIVER_INSTALL_ERROR:
-                    installLib();
-                    Log.Fatal("Driver install error");
-                    break;
-                case DokanNet.DOKAN_MOUNT_ERROR:
-                    Log.Fatal("Mount error");
-                    break;
-                case DokanNet.DOKAN_START_ERROR:
-                    Log.Fatal("Start error");
-                    break;
-                case DokanNet.DOKAN_ERROR:
-                    Log.Fatal("Unknown error");
-                    break;
-                case DokanNet.DOKAN_SUCCESS:
-                    Log.Info("Start success");
-                    break;
-                default:
-                    Log.Fatal("Unknown status: "+ status);
-                    break;
+                ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+                Log.Fatal("StartMainFS fail", e);
             }
-            
             System.Environment.Exit(0);
 
         }
