@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using VKDrive.Loader;
 using VKDrive.Utils;
 
 namespace VKDrive.Files
@@ -13,6 +14,14 @@ namespace VKDrive.Files
     public class Folder : VFile
     {
         public BlockingList<VFile> Childs;
+        ILoader _Loader = null;
+        public ILoader Loader
+        {
+            get
+            {
+                return _Loader;
+            }
+        }
 
         private bool _IsLoader = false;
         public bool IsLoaded
@@ -38,12 +47,24 @@ namespace VKDrive.Files
                 return _IsLoader;
             }
         }
+        
 
         /// <summary>
         /// Дополнительная информация
         /// </summary>
         public Dictionary<string, string> Property = new Dictionary<string,string>();
         public Folder(string name) : base(name)
+        {
+            init();
+        }
+
+        public Folder(string name, ILoader loader) : base(name)
+        {
+            _Loader = loader;
+            init();
+        }
+
+        private void init()
         {
             Attributes = System.IO.FileAttributes.Directory;
             Childs = new BlockingList<VFile>() { new PlainText("Идет загрузка.txt") };
@@ -117,7 +138,8 @@ namespace VKDrive.Files
                     int residue = copy.Count - (i * maxFile); // остаток
                     residue = residue < maxFile ? residue : maxFile;
                     IList<VFile> tmp = copy.GetRange(i * maxFile, residue);
-                    fNode = new Folder(tmp[0].FileName.Substring(0, 1) + ".." + tmp[residue - 1].FileName.Substring(0, 1));
+                    String folderName = VFile.clearName(tmp[0].FileName).Substring(0, 1) + ".." + VFile.clearName(tmp[residue - 1].FileName).Substring(0, 1);
+                    fNode = new Folder(folderName);
 
                     foreach (VFile curFile in tmp)
                     {

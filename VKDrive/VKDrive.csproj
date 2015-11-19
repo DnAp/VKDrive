@@ -122,6 +122,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Files\SMp3.cs" />
+    <Compile Include="Loader\ILoader.cs" />
+    <Compile Include="Loader\VKontakte\Photos\Get.cs" />
+    <Compile Include="Loader\VKontakte\Photos\GetAlbums.cs" />
     <Compile Include="Utils\BlockingList.cs" />
     <Compile Include="VKAPI\APIQuery.cs" />
     <Compile Include="API\AudioApi.cs" />
@@ -212,14 +215,6 @@
       <ProductName>Visual C++ "14" Runtime Libraries %28x86%29</ProductName>
       <Install>true</Install>
     </BootstrapperPackage>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="DokanInstall_0.8.0-RC2.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <Content Include="VKDriveSettings.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Resurces\" />

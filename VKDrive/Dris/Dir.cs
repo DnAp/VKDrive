@@ -37,8 +37,23 @@ namespace VKDrive.Dris
         {
             lock (file)
             {
-                if (!file.IsLoaded && _LoadFile(file))
-                    file.IsLoaded = true;
+                if (!file.IsLoaded)
+                {
+                    if (file.Loader != null)
+                    {
+                        foreach(VFile f in file.Loader.Load() )
+                        {
+                            file.ChildsAdd(f);
+                        }
+                        
+                        file.IsLoaded = true;
+                    }
+                    else if (_LoadFile(file))
+                    {
+                        file.IsLoaded = true;
+                    }
+                    
+                }
             }
         }
 

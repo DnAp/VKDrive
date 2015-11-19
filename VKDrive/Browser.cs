@@ -25,6 +25,7 @@ namespace VKDrive
         public Browser()
         {
             Log.Info("Start vkdrive");
+            
 
             bool mutexWasCreated;
             System.Threading.Mutex mutex = new System.Threading.Mutex(true, "VKDrive", out mutexWasCreated);

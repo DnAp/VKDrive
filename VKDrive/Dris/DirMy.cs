@@ -14,8 +14,6 @@ namespace VKDrive.Dris
 {
     public class DirMy : Dir
     {
-
-
         public override void _LoadRootNode()
         {
             RootNode = new Folder("");
@@ -23,10 +21,9 @@ namespace VKDrive.Dris
             {
                 Folder folder = new Folder("Аудиозаписи");
                 folder.Property.Add("type", "AudioApi.executeGetAlbums");
-                
                 RootNode.Childs.Add(folder);
-                folder = new Folder("Фотографии");
-                folder.Property.Add("type", "photos.getAlbums");
+
+                folder = new Folder("Фотографии", new Loader.VKontakte.Photos.GetAlbums(VKAPILibrary.Instance.UserID));
                 RootNode.Childs.Add(folder);
                 
                 RootNode.IsLoaded = true;
@@ -35,29 +32,12 @@ namespace VKDrive.Dris
         
         public override bool _LoadFile(Files.Folder file)
         {
+            
             if (file.Property["type"] == "AudioApi.executeGetAlbums")
             {
                 AudioApi.executeGetAlbums(new Dictionary<string, string>(){
 				        {"owner_id", VKAPI.VKAPILibrary.Instance.UserID.ToString()}
 			        }, file.Childs);
-            }
-            else if (file.Property["type"] == "photos.getAlbums")
-            {
-                JObject apiResult = (JObject)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("photos.getAlbums"));
-                JArray items = (JArray)apiResult.GetValue("items");
-                Folder curFolder;
-                foreach (JObject item in items)
-                {
-                    SerializationObject.Album album = item.ToObject<SerializationObject.Album>();
-
-                    curFolder = new Folder(album.Title);
-                    curFolder.Property.Add("type", "photos.get");
-                    curFolder.Property.Add("aid", album.Id.ToString());
-                    DateTime unixTimeStamp = new DateTime(1970, 1, 1, 0, 0, 0, 0);
-                    curFolder.CreationTime = unixTimeStamp.AddSeconds(album.Created);
-                    curFolder.LastWriteTime = unixTimeStamp.AddSeconds(album.Updated);
-                    file.ChildsAdd(curFolder);
-                }
             }
             else if (file.Property["type"] == "audio.getInAlbum")
             {
@@ -65,18 +45,6 @@ namespace VKDrive.Dris
 				        {"owner_id", file.Property["uid"]},
                         { "album_id", file.Property["album_id"]}
 			        }, file.Childs);
-            }
-            else if (file.Property["type"] == "photos.get")
-            {
-                JObject apiResult = (JObject)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("photos.get", new Dictionary<string,string>(){ { "album_id", file.Property["aid"]} }));
-
-                Photo photo;
-                JArray items = (JArray)apiResult.GetValue("items");
-                foreach (JObject item in items)
-                {
-                    photo = new Photo(item.ToObject<SerializationObject.Photo>());
-                    file.ChildsAdd(photo);
-                }
             }
             else if (file.Property["type"] == "wait")
             {

@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "VKDrive"
-#define MyAppVersion "0.1.0.7"
+#define MyAppVersion "0.1.0.8"
 #define MyAppPublisher "VDrive"
 #define MyAppURL "http://dnap.su/"
 #define MyAppExeName "VKDrive.exe"
@@ -12,7 +12,7 @@
 ; NOTE: The value of AppId uniquely identifies this application.
 ; Do not use the same AppId value in installers for other applications.
 ; (To generate a new GUID, click Tools | Generate GUID inside the IDE.)
-AppId={{878BB4CD-5D88-4ED5-B490-DB0144B28A56}
+AppId=VKDrive
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 ;AppVerName={#MyAppName} {#MyAppVersion}
@@ -20,35 +20,47 @@ AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
-DefaultDirName={pf}\{#MyAppName}
+
 DefaultGroupName={#MyAppName}
+LicenseFile=..\License.rtf
 OutputBaseFilename=setup
 Compression=lzma
 SolidCompression=yes
+;DefaultDirName={pf}\{#MyAppName}
+DefaultDirName={reg:HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\VKDrive_is1,InstallLocation}
+DisableDirPage=True
+
 
 [Languages]
 Name: "ru"; MessagesFile: "Russian.isl"
 ;Name: "en"; MessagesFile: "compiler:Default.isl"
 ;Name: "de"; MessagesFile: "compiler:Languages\German.isl"
 
+
+[CustomMessages]
+VKDriveOld=The Setup detected application version 
+VKDriveRequired=The installation of {#MyAppName} requires MyApp to be installed.%nInstall MyApp before installing this update.%n%n
+VKDriveTerminated=The setup of update will be terminated.
+
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: 
 
 [Files]
-Source: "C:\Users\DnAp\Documents\Visual Studio 2015\Projects\VKDrive\VKDrive\bin\Release\Resurces\VKDriveSettings.exe"; DestDir: "{app}\Resurces"; Flags: ignoreversion
-Source: "C:\Users\DnAp\Documents\Visual Studio 2015\Projects\VKDrive\VKDrive\bin\Release\Resurces\DokanInstall_0.8.0-RC2.exe"; DestDir: "{app}\Resurces"; Flags: ignoreversion; AfterInstall: RunDokanInstaller;
-Source: "C:\Users\DnAp\Documents\Visual Studio 2015\Projects\VKDrive\VKDrive\bin\Release\VKDrive.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\DnAp\Documents\Visual Studio 2015\Projects\VKDrive\VKDrive\bin\Release\DokanNet.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\DnAp\Documents\Visual Studio 2015\Projects\VKDrive\VKDrive\bin\Release\EntityFramework.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\DnAp\Documents\Visual Studio 2015\Projects\VKDrive\VKDrive\bin\Release\EntityFramework.SqlServer.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\DnAp\Documents\Visual Studio 2015\Projects\VKDrive\VKDrive\bin\Release\log4net.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\DnAp\Documents\Visual Studio 2015\Projects\VKDrive\VKDrive\bin\Release\Newtonsoft.Json.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\DnAp\Documents\Visual Studio 2015\Projects\VKDrive\VKDrive\bin\Release\System.Data.SQLite.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\DnAp\Documents\Visual Studio 2015\Projects\VKDrive\VKDrive\bin\Release\VKDrive.application"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\DnAp\Documents\Visual Studio 2015\Projects\VKDrive\VKDrive\bin\Release\VKDrive.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\DnAp\Documents\Visual Studio 2015\Projects\VKDrive\VKDrive\bin\Release\VKDrive.exe.config"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C:\Users\DnAp\Documents\Visual Studio 2015\Projects\VKDrive\VKDrive\bin\Release\x86\SQLite.Interop.dll"; DestDir: "{app}\x86"; Flags: ignoreversion
-Source: "C:\Users\DnAp\Documents\Visual Studio 2015\Projects\VKDrive\VKDrive\bin\Release\x64\SQLite.Interop.dll"; DestDir: "{app}\x64"; Flags: ignoreversion
+Source: "..\VKDrive\bin\Release\Resurces\VKDriveSettings.exe"; DestDir: "{app}\Resurces"; Flags: ignoreversion
+Source: "..\..\dokany\Dokany_0.8.0-RC2\DokanInstall_0.8.0-RC2.exe"; DestDir: "{app}\Resurces"; Flags: ignoreversion; AfterInstall: RunDokanInstaller;
+Source: "..\VKDrive\bin\Release\VKDrive.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\VKDrive\bin\Release\DokanNet.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\VKDrive\bin\Release\EntityFramework.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\VKDrive\bin\Release\EntityFramework.SqlServer.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\VKDrive\bin\Release\log4net.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\VKDrive\bin\Release\Newtonsoft.Json.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\VKDrive\bin\Release\System.Data.SQLite.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\VKDrive\bin\Release\VKDrive.application"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\VKDrive\bin\Release\VKDrive.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\VKDrive\bin\Release\VKDrive.exe.config"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\VKDrive\bin\Release\x86\SQLite.Interop.dll"; DestDir: "{app}\x86"; Flags: ignoreversion
+Source: "..\VKDrive\bin\Release\x64\SQLite.Interop.dll"; DestDir: "{app}\x64"; Flags: ignoreversion
+Source: "..\License.rtf"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]
@@ -60,6 +72,7 @@ Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChang
 
 
 [Code]
+          
 // shared code for installing the products
 #include "scripts\products.iss"
 // helper functions
@@ -71,21 +84,58 @@ Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChang
 #include "scripts\products\dotnetfx45.iss"
 #include "scripts\products\vcredist2013.iss"
 
-function InitializeSetup(): boolean;
-begin
-	// initialize windows version
-	initwinversion();
-  dotnetfx45();
-	vcredist2013();
+var
+    InstallLocation: String;
 
-	Result := true;
+function GetInstallString(): String;
+var
+    InstPath: String;
+    InstallString: String;
+begin
+
+    initwinversion();
+    dotnetfx45();
+    vcredist2013();
+
+    MsgBox('1', mbError, MB_OK);
+
+    InstPath := ExpandConstant('Software\Microsoft\Windows\CurrentVersion\Uninstall\VKDrive_is1');
+    InstallString := '';
+    if not RegQueryStringValue(HKLM, InstPath, 'InstallLocation', InstallString) then
+        RegQueryStringValue(HKCU, InstPath, 'InstallLocation', InstallString);
+        Result := InstallString;
+        InstallLocation := InstallString;
+    end;
+
+    function InitializeSetup: Boolean;
+    var
+        V: Integer;
+        sUnInstallString: String;
+        Version: String;
+    begin
+        MsgBox('2', mbError, MB_OK);
+        if RegValueExists(HKEY_LOCAL_MACHINE,'Software\Microsoft\Windows\CurrentVersion\Uninstall\VKDrive_is1', 'UninstallString') then begin
+          MsgBox('3', mbError, MB_OK);
+          RegQueryStringValue(HKEY_LOCAL_MACHINE,'Software\Microsoft\Windows\CurrentVersion\Uninstall\VKDrive_is1', 'DisplayVersion', Version);
+          if Version <= ExpandConstant('{#MyAppVersion}') then begin 
+              Result := True;
+              GetInstallString();
+           end
+           else begin
+              MsgBox('4', mbError, MB_OK);
+              MsgBox(ExpandConstant('{cm:VKDriveOld}'+Version+'.'+#13#10#13#10+'{cm:VKDriveRequired}'+'{cm:VKDriveTerminated}'), mbInformation, MB_OK);
+              Result := False;
+           end;
+        end;
+    end;
 end;
+
 
 procedure RunDokanInstaller;
 var
   ResultCode: Integer;
 begin
-  if not Exec(ExpandConstant('{app}\Resurces\DokanInstall_0.8.0-RC2.exe /S'), '', '', SW_SHOWNORMAL,
+  if not Exec(ExpandConstant('{app}\Resurces\DokanInstall_0.8.0-RC2.exe'), '/S', '', SW_SHOWNORMAL,
     ewWaitUntilTerminated, ResultCode)
   then
     MsgBox('Dokan installer failed to run!' + #13#10 +

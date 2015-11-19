@@ -37,7 +37,7 @@ namespace VKDrive.Files
 
         public static string clearName(string name)
         {
-            name = Regex.Replace(name, @"[^a-zA-Zа-яА-Я0-9 +_.,()!#-]+", " ").Trim(" .".ToCharArray());
+            name = Regex.Replace(name, "[\\/?:*\" ><|]+", " ").Trim(" .".ToCharArray());
             name = Regex.Replace(name, @"[!]+", "!");
             if (name.Length > 40)
             {

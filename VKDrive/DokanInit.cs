@@ -67,7 +67,7 @@ namespace VKDrive
                 }
                 try
                 {
-                    Process pr = Process.Start("Resurces\\DokanInstall_0.8.0-RC2.exe", "/S");
+                    Process pr = Process.Start("Resurces\\DokanInstall_0.8.0-RC2.exe"); // , "/S"
                     pr.WaitForExit();
                     pr.Close();
                 }

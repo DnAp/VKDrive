@@ -93,50 +93,6 @@ namespace VKDrive.Dris
                         { "album_id", file.Property["album_id"]}
 			        }, file.Childs);
             }
-            else if (file.Property["type"] == "photos.getAlbums")
-            {
-                try
-                {
-                    apiResult = (JObject)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("photos.getAlbums", new Dictionary<string, string>() { { "gid", file.Property["gid"] } }));
-                    items = (JArray)apiResult.GetValue("items");
-                }
-                catch (Exception e)
-                {
-                    if(e.Data.Contains("code") && e.Data["code"].ToString() == "15" ){
-                        // 15:Access denied: group photos are disabled
-
-                        PlainText readme = new PlainText("Фотографии отключены.txt");
-                        readme.SetText(PlainText.getSubscript());
-                        file.ChildsAdd(readme);
-                        return true;
-                    }
-                    return false;
-                }
-                Folder curFolder;
-                foreach (JObject item in items)
-                {
-                    SerializationObject.Album album = item.ToObject<SerializationObject.Album>();
-                    curFolder = new Folder(album.Title);
-                    curFolder.Property.Add("type", "photos.get");
-                    curFolder.Property.Add("gid", file.Property["gid"]);
-                    curFolder.Property.Add("aid", album.Id.ToString());
-                    DateTime unixTimeStamp = new DateTime(1970, 1, 1, 0, 0, 0, 0);
-                    curFolder.CreationTime = unixTimeStamp.AddSeconds(album.Created);
-                    curFolder.LastWriteTime = unixTimeStamp.AddSeconds(album.Updated);
-                    file.ChildsAdd(curFolder);
-                }
-            }
-            else if (file.Property["type"] == "photos.get")
-            {
-                apiResult = (JObject)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("photos.get",
-                    new Dictionary<string, string>() { { "owner_id", "-"+file.Property["gid"] }, { "album_id", file.Property["aid"] } }));
-                items = (JArray)apiResult.GetValue("items");
-                foreach (JObject item in items)
-                {
-                    SerializationObject.Photo photo = item.ToObject<SerializationObject.Photo>();
-                    file.ChildsAdd(new Photo(photo));
-                }
-            }
             else if (file.Property["type"] == "wait")
             {
                 // Он там грузится в паралельном потоке. Подождать нужно
@@ -165,9 +121,7 @@ namespace VKDrive.Dris
             subFolder.Property.Add("gid", gid);
             curFolder.ChildsAdd(subFolder);
 
-            subFolder = new Folder("Фотографии");
-            subFolder.Property.Add("type", "photos.getAlbums");
-            subFolder.Property.Add("gid", gid);
+            subFolder = new Folder("Фотографии", new Loader.VKontakte.Photos.GetAlbums(-group.Id));
             curFolder.ChildsAdd(subFolder);
 
             curFolder.ChildsAdd(
