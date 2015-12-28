@@ -8,8 +8,8 @@
     <Setting Name="Timeout" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">60</Value>
     </Setting>
-    <Setting Name="MountPoint" Type="System.Char" Scope="User">
-      <Value Profile="(Default)">v</Value>
+    <Setting Name="MountPoint" Type="System.String" Scope="User">
+      <Value Profile="(Default)">V</Value>
     </Setting>
     <Setting Name="LastFmAPIKey" Type="System.String" Scope="User">
       <Value Profile="(Default)">f4239dde5c18ad689f3c0dbbb1555271</Value>

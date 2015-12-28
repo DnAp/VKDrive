@@ -11,17 +11,17 @@ namespace VKDrive.Files
 {
     class Photo : Download
     {
-        public int PID = 0;
+        public int Pid = 0;
         public short Duration = 0;
 
         public Photo(string name) : base(name) { }
 
         public Photo(SerializationObject.Photo photo) : base("")
         {
-            loadByObject(photo);
+            LoadByObject(photo);
         }
 
-        private void loadByObject(SerializationObject.Photo photo)
+        private void LoadByObject(SerializationObject.Photo photo)
         {
             string name = photo.Text.Replace("<br>", " ");
             if (name.Length == 0)
@@ -29,8 +29,8 @@ namespace VKDrive.Files
                 name = photo.Id.ToString();
             }
 
-            this.FileName = clearName(name.Trim() + ".jpg");
-            PID = photo.Id;
+            this.FileName = ClearName(name.Trim() + ".jpg");
+            Pid = photo.Id;
             Url = photo.GetSrc();
             DateTime unixTimeStamp = new DateTime(1970, 1, 1, 0, 0, 0, 0);
             CreationTime = unixTimeStamp.AddSeconds(photo.Created);
@@ -43,7 +43,7 @@ namespace VKDrive.Files
             long offset,
             Dokan.DokanFileInfo info)
         {
-            return DownloadManager.Instance.getBlock(this, buffer, ref readBytes, offset);
+            return DownloadManager.Instance.GetBlock(this, buffer, ref readBytes, offset);
         }
 
         /*public override string getUniqueId()
@@ -51,20 +51,20 @@ namespace VKDrive.Files
             return "pid"+PID;
         }*/
 
-        public override int[] getUniqueId()
+        public override int[] GetUniqueId()
         {
-            return new int[] { 0, PID };
+            return new int[] { 0, Pid };
         }
 
-        public override bool update()
+        public override bool Update()
         {
-            if (PID == 0)
+            if (Pid == 0)
                 return false;
             try
             {
-                Dictionary<string, string> param = new Dictionary<string, string>() { { "photos", PID.ToString() } };
-                SerializationObject.Photo photo = VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("photos.getById", param)).ToObject<SerializationObject.Photo>();
-                loadByObject(photo);
+                Dictionary<string, string> param = new Dictionary<string, string>() { { "photos", Pid.ToString() } };
+                SerializationObject.Photo photo = VKAPI.Vkapi.Instance.StartTaskSync(new VKAPI.ApiQuery("photos.getById", param)).ToObject<SerializationObject.Photo>();
+                LoadByObject(photo);
                 LastWriteTime = DateTime.Now;
             }
             catch (Exception e)

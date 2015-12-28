@@ -8,16 +8,16 @@ using System.Threading.Tasks;
 
 namespace VKDrive
 {
-    class DB : IDisposable
+    class Db : IDisposable
     {
-        public SQLiteConnection SQLite;
+        public SQLiteConnection SqLite;
         private sealed class SingletonCreator
         {
-            private static readonly DB instance = new DB();
-            public static DB Instance { get { return instance; } }
+            private static readonly Db instance = new Db();
+            public static Db Instance { get { return instance; } }
         }
 
-        public static DB Instance
+        public static Db Instance
         {
             get { 
                 return SingletonCreator.Instance; 
@@ -26,12 +26,12 @@ namespace VKDrive
 
         public void Connect()
         {
-            if (SQLite != null)
+            if (SqLite != null)
             {
-                SQLite.Close();
+                SqLite.Close();
             }
-            SQLite = new SQLiteConnection("Data Source=:memory:;New=True;");
-            SQLite.Open();
+            SqLite = new SQLiteConnection("Data Source=:memory:;New=True;");
+            SqLite.Open();
 
 
             Execute(@"CREATE TABLE file_parts( 
@@ -52,7 +52,7 @@ namespace VKDrive
         [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Security", "CA2100:Проверка запросов SQL на уязвимости безопасности")]
         public SQLiteDataReader Execute(string textCommand)
         {
-            SQLiteCommand command = new SQLiteCommand(textCommand, SQLite);
+            SQLiteCommand command = new SQLiteCommand(textCommand, SqLite);
             //Console.WriteLine(textCommand);
             //command.CommandText = textCommand;
             //command.CommandType = CommandType.Text;
@@ -62,9 +62,9 @@ namespace VKDrive
 
         public void Dispose()
         {
-            if (SQLite != null)
+            if (SqLite != null)
             {
-                SQLite.Close();
+                SqLite.Close();
             }
         }
     }

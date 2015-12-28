@@ -15,22 +15,22 @@ namespace Procurios.Public
 	/// All numbers are parsed to doubles.
 	/// </summary>
     [Obsolete("Use JsonConvert")]
-	public class JSON
+	public class Json
 	{
-		public const int TOKEN_NONE = 0;
-		public const int TOKEN_CURLY_OPEN = 1;
-		public const int TOKEN_CURLY_CLOSE = 2;
-		public const int TOKEN_SQUARED_OPEN = 3;
-		public const int TOKEN_SQUARED_CLOSE = 4;
-		public const int TOKEN_COLON = 5;
-		public const int TOKEN_COMMA = 6;
-		public const int TOKEN_STRING = 7;
-		public const int TOKEN_NUMBER = 8;
-		public const int TOKEN_TRUE = 9;
-		public const int TOKEN_FALSE = 10;
-		public const int TOKEN_NULL = 11;
+		public const int TokenNone = 0;
+		public const int TokenCurlyOpen = 1;
+		public const int TokenCurlyClose = 2;
+		public const int TokenSquaredOpen = 3;
+		public const int TokenSquaredClose = 4;
+		public const int TokenColon = 5;
+		public const int TokenComma = 6;
+		public const int TokenString = 7;
+		public const int TokenNumber = 8;
+		public const int TokenTrue = 9;
+		public const int TokenFalse = 10;
+		public const int TokenNull = 11;
 
-		private const int BUILDER_CAPACITY = 2000;
+		private const int BuilderCapacity = 2000;
 
 		/// <summary>
 		/// Parses the string json into a value
@@ -70,7 +70,7 @@ namespace Procurios.Public
 		/// <returns>A JSON encoded string, or null if object 'json' is not serializable</returns>
 		public static string JsonEncode(object json)
 		{
-			StringBuilder builder = new StringBuilder(BUILDER_CAPACITY);
+			StringBuilder builder = new StringBuilder(BuilderCapacity);
 			bool success = SerializeValue(json, builder);
 			return (success ? builder.ToString() : null);
 		}
@@ -86,12 +86,12 @@ namespace Procurios.Public
 			bool done = false;
 			while (!done) {
 				token = LookAhead(json, index);
-				if (token == JSON.TOKEN_NONE) {
+				if (token == Json.TokenNone) {
 					success = false;
 					return null;
-				} else if (token == JSON.TOKEN_COMMA) {
+				} else if (token == Json.TokenComma) {
 					NextToken(json, ref index);
-				} else if (token == JSON.TOKEN_CURLY_CLOSE) {
+				} else if (token == Json.TokenCurlyClose) {
 					NextToken(json, ref index);
 					return table;
 				} else {
@@ -105,7 +105,7 @@ namespace Procurios.Public
 
 					// :
 					token = NextToken(json, ref index);
-					if (token != JSON.TOKEN_COLON) {
+					if (token != Json.TokenColon) {
 						success = false;
 						return null;
 					}
@@ -134,12 +134,12 @@ namespace Procurios.Public
 			bool done = false;
 			while (!done) {
 				int token = LookAhead(json, index);
-				if (token == JSON.TOKEN_NONE) {
+				if (token == Json.TokenNone) {
 					success = false;
 					return null;
-				} else if (token == JSON.TOKEN_COMMA) {
+				} else if (token == Json.TokenComma) {
 					NextToken(json, ref index);
-				} else if (token == JSON.TOKEN_SQUARED_CLOSE) {
+				} else if (token == Json.TokenSquaredClose) {
 					NextToken(json, ref index);
 					break;
 				} else {
@@ -158,24 +158,24 @@ namespace Procurios.Public
 		protected static object ParseValue(char[] json, ref int index, ref bool success)
 		{
 			switch (LookAhead(json, index)) {
-				case JSON.TOKEN_STRING:
+				case Json.TokenString:
 					return ParseString(json, ref index, ref success);
-				case JSON.TOKEN_NUMBER:
+				case Json.TokenNumber:
 					return ParseNumber(json, ref index);
-				case JSON.TOKEN_CURLY_OPEN:
+				case Json.TokenCurlyOpen:
 					return ParseObject(json, ref index, ref success);
-				case JSON.TOKEN_SQUARED_OPEN:
+				case Json.TokenSquaredOpen:
 					return ParseArray(json, ref index, ref success);
-				case JSON.TOKEN_TRUE:
+				case Json.TokenTrue:
 					NextToken(json, ref index);
 					return Boolean.Parse("TRUE");
-				case JSON.TOKEN_FALSE:
+				case Json.TokenFalse:
 					NextToken(json, ref index);
 					return Boolean.Parse("FALSE");
-				case JSON.TOKEN_NULL:
+				case Json.TokenNull:
 					NextToken(json, ref index);
 					return null;
-				case JSON.TOKEN_NONE:
+				case Json.TokenNone:
 					break;
 			}
 
@@ -185,7 +185,7 @@ namespace Procurios.Public
 
 		protected static string ParseString(char[] json, ref int index, ref bool success)
 		{
-			StringBuilder s = new StringBuilder(BUILDER_CAPACITY);
+			StringBuilder s = new StringBuilder(BuilderCapacity);
 			char c;
 
 			EatWhitespace(json, ref index);
@@ -302,24 +302,24 @@ namespace Procurios.Public
 			EatWhitespace(json, ref index);
 
 			if (index == json.Length) {
-				return JSON.TOKEN_NONE;
+				return Json.TokenNone;
 			}
 
 			char c = json[index];
 			index++;
 			switch (c) {
 				case '{':
-					return JSON.TOKEN_CURLY_OPEN;
+					return Json.TokenCurlyOpen;
 				case '}':
-					return JSON.TOKEN_CURLY_CLOSE;
+					return Json.TokenCurlyClose;
 				case '[':
-					return JSON.TOKEN_SQUARED_OPEN;
+					return Json.TokenSquaredOpen;
 				case ']':
-					return JSON.TOKEN_SQUARED_CLOSE;
+					return Json.TokenSquaredClose;
 				case ',':
-					return JSON.TOKEN_COMMA;
+					return Json.TokenComma;
 				case '"':
-					return JSON.TOKEN_STRING;
+					return Json.TokenString;
 				case '0':
 				case '1':
 				case '2':
@@ -331,9 +331,9 @@ namespace Procurios.Public
 				case '8':
 				case '9':
 				case '-':
-					return JSON.TOKEN_NUMBER;
+					return Json.TokenNumber;
 				case ':':
-					return JSON.TOKEN_COLON;
+					return Json.TokenColon;
 			}
 			index--;
 
@@ -347,7 +347,7 @@ namespace Procurios.Public
 					json[index + 3] == 's' &&
 					json[index + 4] == 'e') {
 					index += 5;
-					return JSON.TOKEN_FALSE;
+					return Json.TokenFalse;
 				}
 			}
 
@@ -358,7 +358,7 @@ namespace Procurios.Public
 					json[index + 2] == 'u' &&
 					json[index + 3] == 'e') {
 					index += 4;
-					return JSON.TOKEN_TRUE;
+					return Json.TokenTrue;
 				}
 			}
 
@@ -369,11 +369,11 @@ namespace Procurios.Public
 					json[index + 2] == 'l' &&
 					json[index + 3] == 'l') {
 					index += 4;
-					return JSON.TOKEN_NULL;
+					return Json.TokenNull;
 				}
 			}
 
-			return JSON.TOKEN_NONE;
+			return Json.TokenNone;
 		}
 
 		protected static bool SerializeValue(object value, StringBuilder builder)

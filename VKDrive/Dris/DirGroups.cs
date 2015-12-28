@@ -11,7 +11,7 @@ namespace VKDrive.Dris
 {
     class DirGroups : Dir
     {
-        const string STORAGE_KEY = "DirGroups";
+        const string StorageKey = "DirGroups";
 
         public override void _LoadRootNode()
         {
@@ -35,7 +35,7 @@ namespace VKDrive.Dris
                         "Такая группа уже существует."
                     ));
 
-                apiResult = (JObject)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("groups.get", new Dictionary<string, string>() { { "extended", "1" } }));
+                apiResult = (JObject)VKAPI.Vkapi.Instance.StartTaskSync(new VKAPI.ApiQuery("groups.get", new Dictionary<string, string>() { { "extended", "1" } }));
                 items = (JArray)apiResult.GetValue("items");
 
                 List<int> gruopIds = new List<int>();
@@ -47,10 +47,10 @@ namespace VKDrive.Dris
                     gruopIds.Add(group.Id);
                 }
                 
-                string gids = API.VKStorage.get(STORAGE_KEY);
+                string gids = API.VkStorage.Get(StorageKey);
                 if (gids.Length > 0)
                 {
-                    JArray values = (JArray)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("groups.getById", new Dictionary<string, string>() { { "group_ids", gids.Replace('\n', ',') } }));
+                    JArray values = (JArray)VKAPI.Vkapi.Instance.StartTaskSync(new VKAPI.ApiQuery("groups.getById", new Dictionary<string, string>() { { "group_ids", gids.Replace('\n', ',') } }));
 
                     foreach (JObject item in items)
                     {
@@ -62,12 +62,12 @@ namespace VKDrive.Dris
                 }
                 
             }
-            else if (file.Property["type"] == "AudioApi.executeGetAlbums")
+            else if (file.Property["type"] == "AudioApi.ExecuteGetAlbums")
             {
                 //// 15:Access denied: group audio is disabled
                 try
                 {
-                    AudioApi.executeGetAlbums(new Dictionary<string, string>(){
+                    AudioApi.ExecuteGetAlbums(new Dictionary<string, string>(){
 				        {"owner_id", "-"+file.Property["gid"]}
 			        }, file.Childs);
                 }
@@ -77,7 +77,7 @@ namespace VKDrive.Dris
                         // 15:Access denied: group photos are disabled
 
                         PlainText readme = new PlainText("Аудиозаписи отключены.txt");
-                        readme.SetText(PlainText.getSubscript());
+                        readme.SetText(PlainText.GetSubscript());
                         file.ChildsAdd(readme);
                         return true;
                     }
@@ -88,7 +88,7 @@ namespace VKDrive.Dris
             }
             else if (file.Property["type"] == "audio.getInAlbum")
             {
-                AudioApi.loadMP3(new Dictionary<string, string>(){
+                AudioApi.LoadMp3(new Dictionary<string, string>(){
 				        {"gid", file.Property["gid"]},
                         { "album_id", file.Property["album_id"]}
 			        }, file.Childs);
@@ -116,7 +116,7 @@ namespace VKDrive.Dris
             curFolder.Property.Add("gid", gid);
 
             Folder subFolder = new Folder("Аудиозаписи");
-            subFolder.Property.Add("type", "AudioApi.executeGetAlbums");
+            subFolder.Property.Add("type", "AudioApi.ExecuteGetAlbums");
             subFolder.Property.Add("inStorage", "1");
             subFolder.Property.Add("gid", gid);
             curFolder.ChildsAdd(subFolder);
@@ -151,7 +151,7 @@ namespace VKDrive.Dris
             JArray items;
             try
             {
-                items = (JArray)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("groups.getById", new Dictionary<string, string>() { { "group_id", filename } }));
+                items = (JArray)VKAPI.Vkapi.Instance.StartTaskSync(new VKAPI.ApiQuery("groups.getById", new Dictionary<string, string>() { { "group_id", filename } }));
             }
             catch (Exception e)
             {
@@ -192,7 +192,7 @@ namespace VKDrive.Dris
                     continue;
                 }
 
-                API.VKStorage.join(STORAGE_KEY, gid);
+                API.VkStorage.Join(StorageKey, gid);
 
                 file.ChildsAdd(CreateGroupFolder(group));
                 count++;
@@ -214,7 +214,7 @@ namespace VKDrive.Dris
             if (node == null && node.GetType() == typeof(Folder) && ((Folder)node).Property.ContainsKey("inStorage"))
             {
                 RootNode.Childs.Remove(node);
-                API.VKStorage.remove(STORAGE_KEY, ((Folder)node).Property["gid"]);
+                API.VkStorage.Remove(StorageKey, ((Folder)node).Property["gid"]);
                 return DokanNet.DOKAN_SUCCESS;
             }
 

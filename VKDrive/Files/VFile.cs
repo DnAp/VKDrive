@@ -19,7 +19,7 @@ namespace VKDrive.Files
         public VFile(string name)
         {
             Attributes = FileAttributes.ReadOnly;
-            FileName = clearName(name);
+            FileName = ClearName(name);
 
             LastAccessTime = DateTime.Now;
             LastWriteTime = DateTime.Now;
@@ -35,7 +35,7 @@ namespace VKDrive.Files
 
 
 
-        public static string clearName(string name)
+        public static string ClearName(string name)
         {
             name = Regex.Replace(name, "[\\/?:*\" ><|]+", " ").Trim(" .".ToCharArray());
             name = Regex.Replace(name, @"[!]+", "!");

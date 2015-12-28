@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace VKDrive.Files
 {
-    class PlainText : VFile
+    public class PlainText : VFile
     {
-        private byte[] text;
+        private byte[] _text;
 
         public static string InternetShortcut(string url)
         {
@@ -19,7 +19,7 @@ namespace VKDrive.Files
             LastWriteTime = DateTime.Now;
             CreationTime = DateTime.Now;
             LastAccessTime = DateTime.Now;
-            text = new byte[0];
+            _text = new byte[0];
         }
 
         public PlainText(string name, string textString)
@@ -34,24 +34,24 @@ namespace VKDrive.Files
         public void SetText(string textString)
         {
             textString = textString.Replace("\n", "\r\n");
-            text = Encoding.Convert(Encoding.UTF8, Encoding.GetEncoding(1251), Encoding.UTF8.GetBytes(textString));
-            Length = text.Length;
+            _text = Encoding.Convert(Encoding.UTF8, Encoding.GetEncoding(1251), Encoding.UTF8.GetBytes(textString));
+            Length = _text.Length;
 
         }
 
     
         public override int ReadFile(byte[] buffer, ref uint readBytes, long offset, Dokan.DokanFileInfo info)
         {
-            if (offset >= text.Length)
+            if (offset >= _text.Length)
             {
                 readBytes = 0;
                 return Dokan.DokanNet.DOKAN_SUCCESS;
             }
 
-            readBytes = Convert.ToUInt32(offset + buffer.Length > text.Length ? text.Length - offset : buffer.Length);
+            readBytes = Convert.ToUInt32(offset + buffer.Length > _text.Length ? _text.Length - offset : buffer.Length);
             // Тут ограничение нужно по длинне
             //text.CopyTo(buffer, offset);
-            Array.Copy(text, offset, buffer, 0, readBytes);
+            Array.Copy(_text, offset, buffer, 0, readBytes);
             return Dokan.DokanNet.DOKAN_SUCCESS;
         }
 
@@ -59,7 +59,7 @@ namespace VKDrive.Files
         /// Подпись
         /// </summary>
         /// <returns></returns>
-        public static string getSubscript(){
+        public static string GetSubscript(){
             return "\n\nСоздано при помощи VKDrive\nhttp://vkdrive.dnap.su/\nmailto: vkdrive@dnap.su";
         }
     }

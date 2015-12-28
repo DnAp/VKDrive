@@ -46,10 +46,10 @@ namespace VKDrive.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("v")]
-        public char MountPoint {
+        [global::System.Configuration.DefaultSettingValueAttribute("V")]
+        public string MountPoint {
             get {
-                return ((char)(this["MountPoint"]));
+                return ((string)(this["MountPoint"]));
             }
             set {
                 this["MountPoint"] = value;

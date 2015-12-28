@@ -123,9 +123,11 @@
   <ItemGroup>
     <Compile Include="Files\SMp3.cs" />
     <Compile Include="Loader\ILoader.cs" />
+    <Compile Include="Loader\VKontakte\Audio\Search.cs" />
     <Compile Include="Loader\VKontakte\Photos\Get.cs" />
     <Compile Include="Loader\VKontakte\Photos\GetAlbums.cs" />
     <Compile Include="Utils\BlockingList.cs" />
+    <Compile Include="Utils\Exts.cs" />
     <Compile Include="VKAPI\APIQuery.cs" />
     <Compile Include="API\AudioApi.cs" />
     <Compile Include="API\VKStorage.cs" />

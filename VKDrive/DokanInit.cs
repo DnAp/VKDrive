@@ -12,22 +12,22 @@ namespace VKDrive
     public static class DokanInit
     {
         public static Thread DokanThread;
-        public static int status = 1;
-        public static MainFS mainFS;
+        public static int Status = 1;
+        public static MainFs MainFs;
 
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        public static bool test() // todo Переделать на установлен ли драйвер?
+        public static bool Test() // todo Переделать на установлен ли драйвер?
         {
             return File.Exists(Environment.GetFolderPath(Environment.SpecialFolder.System) + "\\dokan.dll");
         }
 
-        public static int installLib()
+        public static int InstallLib()
         {
-            return installLib(false);
+            return InstallLib(false);
         }
 
-        private static int installLib(bool twoStart)
+        private static int InstallLib(bool twoStart)
         {
             // C:\Windows\system32\drivers\dokan.sys
 
@@ -72,45 +72,44 @@ namespace VKDrive
                     pr.Close();
                 }
                 catch (Exception) {
-                    return installLib(true);
+                    return InstallLib(true);
                 }
-                if (!test())
+                if (!Test())
                 {
-                    return installLib(true);
+                    return InstallLib(true);
                 }
                 return 1;
             }
             return 0;
         }
 
-        public static void start()
+        public static void Start()
         {
-            DokanThread = new Thread(startMainFS);
+            DokanThread = new Thread(StartMainFs);
             DokanThread.Start();
         }
 
-        public static void end()
+        public static void End()
         {
             try
             {
-                Dokan.DokanNet.DokanUnmount(Properties.Settings.Default.MountPoint);
+                Dokan.DokanNet.DokanUnmount(Properties.Settings.Default.MountPoint[0]);
                 Dokan.DokanNet.DokanRemoveMountPoint(Properties.Settings.Default.MountPoint + ":\\");
             }
             catch (Exception) { }
         }
 
-        public static bool isWorking()
+        public static bool IsWorking()
         {
-            return status == 1;
+            return Status == 1;
         }
 
-        private static void startMainFS(object obj)
+        private static void StartMainFs(object obj)
         {
             try {
                 DokanOptions opt = new DokanOptions();
 
-                char mountPoint = Properties.Settings.Default.MountPoint;
-                opt.MountPoint = mountPoint + ":\\";
+                opt.MountPoint = Properties.Settings.Default.MountPoint + ":\\";
                 opt.DebugMode = false;
                 opt.UseStdErr = true;
 
@@ -118,20 +117,20 @@ namespace VKDrive
                 opt.VolumeLabel = "VKDrive";
                 opt.UseKeepAlive = false;
 
-                mainFS = new MainFS(mountPoint);
-                status = DokanNet.DokanMain(opt, mainFS);
+                MainFs = new MainFs();
+                Status = DokanNet.DokanMain(opt, MainFs);
 
-                switch (status)
+                switch (Status)
                 {
                     case DokanNet.DOKAN_DRIVE_LETTER_ERROR:
                         Log.Fatal("Drvie letter error");
                         break;
                     case DokanNet.DOKAN_DRIVER_INSTALL_ERROR:
-                        installLib();
+                        InstallLib();
                         Log.Fatal("Driver install error");
                         break;
-                    case DokanNet.DOKAN_MOUNT_ERROR:
-                        Log.Fatal("Mount error");
+                    case DokanNet.DOKAN_MOUNT_ERROR: // Can't assign drive letter
+						Log.Fatal("Mount error");
                         break;
                     case DokanNet.DOKAN_START_ERROR:
                         Log.Fatal("Start error");
@@ -143,13 +142,13 @@ namespace VKDrive
                         Log.Info("Start success");
                         break;
                     default:
-                        Log.Fatal("Unknown status: " + status);
+                        Log.Fatal("Unknown status: " + Status);
                         break;
                 }
             }catch(Exception e)
             {
-                ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-                Log.Fatal("StartMainFS fail", e);
+                ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+                log.Fatal("StartMainFS fail", e);
             }
             System.Environment.Exit(0);
 

@@ -16,9 +16,9 @@ namespace VKDrive.Dris
 {
     class DirUsers : Dir
     {
-        private readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private readonly ILog _log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        const string STORAGE_KEY = "DirUsers";
+        const string StorageKey = "DirUsers";
         public override void _LoadRootNode()
         {
             RootNode = new Folder("");
@@ -28,10 +28,10 @@ namespace VKDrive.Dris
 
         public override bool _LoadFile(Files.Folder file)
         {
-            Log.Debug("_LoadFile " + file.toString());
+            _log.Debug("_LoadFile " + file.toString());
             if (file.Property["type"] == "friends.getLists")
             {
-                JObject apiResult = (JObject)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("friends.getLists"));
+                JObject apiResult = (JObject)VKAPI.Vkapi.Instance.StartTaskSync(new VKAPI.ApiQuery("friends.getLists"));
                 JArray items = (JArray)apiResult.GetValue("items");
                 
                 Folder curFolder = new Folder("Все");
@@ -68,7 +68,7 @@ namespace VKDrive.Dris
                     param.Add("list_id", key.ToString());
                 }
 
-                JObject apiResult = (JObject)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("friends.get", param));
+                JObject apiResult = (JObject)VKAPI.Vkapi.Instance.StartTaskSync(new VKAPI.ApiQuery("friends.get", param));
                 JArray items = (JArray)apiResult.GetValue("items");
 
                 foreach (JObject item in items)
@@ -110,7 +110,7 @@ namespace VKDrive.Dris
             }
             else if (file.Property["type"] == "storage.get")
             {
-                string storageUids = API.VKStorage.get(STORAGE_KEY);
+                string storageUids = API.VkStorage.Get(StorageKey);
 
                 file.ChildsAdd(new Files.Settings("Добавить людей.lnk"));
                 file.ChildsAdd(
@@ -123,24 +123,24 @@ namespace VKDrive.Dris
 
                 if (storageUids.Length > 0)
                 {
-                    JArray items = (JArray)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("users.get", new Dictionary<string, string>() { { "user_ids", storageUids.Replace('\n', ',') } }));
+                    JArray items = (JArray)VKAPI.Vkapi.Instance.StartTaskSync(new VKAPI.ApiQuery("users.get", new Dictionary<string, string>() { { "user_ids", storageUids.Replace('\n', ',') } }));
                     foreach (JObject item in items)
                     {
                         file.ChildsAdd(CreateUserFolder(item.ToObject<SerializationObject.User>()));
                     }
                 }
             }
-            else if (file.Property["type"] == "AudioApi.executeGetAlbums")
+            else if (file.Property["type"] == "AudioApi.ExecuteGetAlbums")
             {
                 System.Collections.ArrayList files = new System.Collections.ArrayList();
 
-                AudioApi.executeGetAlbums(new Dictionary<string, string>(){
+                AudioApi.ExecuteGetAlbums(new Dictionary<string, string>(){
 				        {"owner_id", file.Property["uid"]}
 			        }, file.Childs);
             }
             else if (file.Property["type"] == "audio.getInAlbum")
             {
-                AudioApi.loadMP3(new Dictionary<string, string>(){
+                AudioApi.LoadMp3(new Dictionary<string, string>(){
 				        {"owner_id", file.Property["uid"]},
                         { "album_id", file.Property["album_id"]}
 			        }, file.Childs);
@@ -169,7 +169,7 @@ namespace VKDrive.Dris
             string uid = user.Id.ToString();
 
             Folder subFolder = new Folder("Аудиозаписи");
-            subFolder.Property.Add("type", "AudioApi.executeGetAlbums");
+            subFolder.Property.Add("type", "AudioApi.ExecuteGetAlbums");
             subFolder.Property.Add("uid", uid);
             curFolder.ChildsAdd(subFolder);
 
@@ -203,7 +203,7 @@ namespace VKDrive.Dris
             JObject apiResult;
             try
             {
-                apiResult = (JObject)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("users.get", new Dictionary<string, string>() { { "uids", filename } }));
+                apiResult = (JObject)VKAPI.Vkapi.Instance.StartTaskSync(new VKAPI.ApiQuery("users.get", new Dictionary<string, string>() { { "uids", filename } }));
             }
             catch (Exception e)
             {
@@ -243,7 +243,7 @@ namespace VKDrive.Dris
                     continue;
                 }
 
-                API.VKStorage.join(STORAGE_KEY, user.Id.ToString());
+                API.VkStorage.Join(StorageKey, user.Id.ToString());
 
                 file.ChildsAdd(CreateUserFolder(user));
 

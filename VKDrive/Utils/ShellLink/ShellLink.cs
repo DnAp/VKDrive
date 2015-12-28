@@ -23,7 +23,7 @@ namespace vbAccelerator.Components.Shell
 		{
 			[PreserveSig]
 				//[helpstring("Returns the class identifier for the component object")]
-			void GetClassID(out Guid pClassID);
+			void GetClassID(out Guid pClassId);
 		}
 		#endregion
 
@@ -35,7 +35,7 @@ namespace vbAccelerator.Components.Shell
 		{
 			// can't get this to go if I extend IPersist, so put it here:
 			[PreserveSig]
-			void GetClassID(out Guid pClassID);
+			void GetClassID(out Guid pClassId);
 
 			//[helpstring("Checks for changes since last file write")]		
 			void IsDirty();
@@ -70,7 +70,7 @@ namespace vbAccelerator.Components.Shell
 			void GetPath(
 				[Out(), MarshalAs(UnmanagedType.LPStr)] StringBuilder pszFile, 
 				int cchMaxPath, 
-				ref _WIN32_FIND_DATAA pfd, 
+				ref Win32FindDataa pfd, 
 				uint fFlags);
 
 			//[helpstring("Retrieves the list of shell link item identifiers")]
@@ -152,7 +152,7 @@ namespace vbAccelerator.Components.Shell
 			void GetPath(
 				[Out(), MarshalAs(UnmanagedType.LPWStr)] StringBuilder pszFile, 
 				int cchMaxPath, 
-				ref _WIN32_FIND_DATAW pfd, 
+				ref Win32FindDataw pfd, 
 				uint fFlags);
 
 			//[helpstring("Retrieves the list of shell link item identifiers")]
@@ -234,41 +234,41 @@ namespace vbAccelerator.Components.Shell
 		#endregion
 	
 		#region Private IShellLink enumerations
-		private enum EShellLinkGP : uint
+		private enum EShellLinkGp : uint
 		{
-			SLGP_SHORTPATH = 1,
-			SLGP_UNCPRIORITY = 2
+			SlgpShortpath = 1,
+			SlgpUncpriority = 2
 		}
 
 		[Flags]
 		private enum EShowWindowFlags : uint
 		{
-			SW_HIDE = 0,
-			SW_SHOWNORMAL = 1,
-			SW_NORMAL = 1,
-			SW_SHOWMINIMIZED = 2,
-			SW_SHOWMAXIMIZED = 3,
-			SW_MAXIMIZE = 3,
-			SW_SHOWNOACTIVATE = 4,
-			SW_SHOW = 5,
-			SW_MINIMIZE = 6,
-			SW_SHOWMINNOACTIVE = 7,
-			SW_SHOWNA = 8,
-			SW_RESTORE = 9,
-			SW_SHOWDEFAULT = 10,
-			SW_MAX = 10
+			SwHide = 0,
+			SwShownormal = 1,
+			SwNormal = 1,
+			SwShowminimized = 2,
+			SwShowmaximized = 3,
+			SwMaximize = 3,
+			SwShownoactivate = 4,
+			SwShow = 5,
+			SwMinimize = 6,
+			SwShowminnoactive = 7,
+			SwShowna = 8,
+			SwRestore = 9,
+			SwShowdefault = 10,
+			SwMax = 10
 		}
 		#endregion
 
 		#region IShellLink Private structs
 
 		[StructLayoutAttribute(LayoutKind.Sequential, Pack=4, Size=0, CharSet=CharSet.Unicode)]
-		private struct _WIN32_FIND_DATAW
+		private struct Win32FindDataw
 		{
 			public uint dwFileAttributes;
-			public _FILETIME ftCreationTime;
-			public _FILETIME ftLastAccessTime;
-			public _FILETIME ftLastWriteTime;
+			public Filetime ftCreationTime;
+			public Filetime ftLastAccessTime;
+			public Filetime ftLastWriteTime;
 			public uint nFileSizeHigh;
 			public uint nFileSizeLow;
 			public uint dwReserved0;
@@ -280,12 +280,12 @@ namespace vbAccelerator.Components.Shell
 		}
 
 		[StructLayoutAttribute(LayoutKind.Sequential, Pack=4, Size=0, CharSet=CharSet.Ansi)]
-		private struct _WIN32_FIND_DATAA
+		private struct Win32FindDataa
 		{
 			public uint dwFileAttributes;
-			public _FILETIME ftCreationTime;
-			public _FILETIME ftLastAccessTime;
-			public _FILETIME ftLastWriteTime;
+			public Filetime ftCreationTime;
+			public Filetime ftLastAccessTime;
+			public Filetime ftLastWriteTime;
 			public uint nFileSizeHigh;
 			public uint nFileSizeLow;
 			public uint dwReserved0;
@@ -297,7 +297,7 @@ namespace vbAccelerator.Components.Shell
 		}
 
 		[StructLayoutAttribute(LayoutKind.Sequential, Pack=4, Size=0)]
-		private struct _FILETIME 
+		private struct Filetime 
 		{
 			public uint dwLowDateTime;
 			public uint dwHighDateTime;
@@ -335,11 +335,11 @@ namespace vbAccelerator.Components.Shell
 			/// Allow any match during resolution.  Has no effect
 			/// on ME/2000 or above, use the other flags instead.
 			/// </summary>
-			SLR_ANY_MATCH = 0x2,
+			SlrAnyMatch = 0x2,
 			/// <summary>
 			/// Call the Microsoft Windows Installer. 
 			/// </summary>
-			SLR_INVOKE_MSI = 0x80,
+			SlrInvokeMsi = 0x80,
 			/// <summary>
 			/// Disable distributed link tracking. By default, 
 			/// distributed link tracking tracks removable media 
@@ -348,7 +348,7 @@ namespace vbAccelerator.Components.Shell
 			/// systems whose drive letter has changed. Setting 
 			/// SLR_NOLINKINFO disables both types of tracking.
 			/// </summary>
-			SLR_NOLINKINFO = 0x40,
+			SlrNolinkinfo = 0x40,
 			/// <summary>
 			/// Do not display a dialog box if the link cannot be resolved. 
 			/// When SLR_NO_UI is set, a time-out value that specifies the 
@@ -358,46 +358,46 @@ namespace vbAccelerator.Components.Shell
 			/// If the timeout is not set, the time-out duration will be 
 			/// set to the default value of 3,000 milliseconds (3 seconds). 
 			/// </summary>										    
-			SLR_NO_UI = 0x1,
+			SlrNoUi = 0x1,
 			/// <summary>
 			/// Not documented in SDK.  Assume same as SLR_NO_UI but 
 			/// intended for applications without a hWnd.
 			/// </summary>
-			SLR_NO_UI_WITH_MSG_PUMP = 0x101,
+			SlrNoUiWithMsgPump = 0x101,
 			/// <summary>
 			/// Do not update the link information. 
 			/// </summary>
-			SLR_NOUPDATE = 0x8,
+			SlrNoupdate = 0x8,
 			/// <summary>
 			/// Do not execute the search heuristics. 
 			/// </summary>																																																																																																																																																																																																														
-			SLR_NOSEARCH = 0x10,
+			SlrNosearch = 0x10,
 			/// <summary>
 			/// Do not use distributed link tracking. 
 			/// </summary>
-			SLR_NOTRACK = 0x20,
+			SlrNotrack = 0x20,
 			/// <summary>
 			/// If the link object has changed, update its path and list 
 			/// of identifiers. If SLR_UPDATE is set, you do not need to 
 			/// call IPersistFile::IsDirty to determine whether or not 
 			/// the link object has changed. 
 			/// </summary>
-			SLR_UPDATE  = 0x4
+			SlrUpdate  = 0x4
 		}
 
 		public enum LinkDisplayMode : uint
 		{
-			edmNormal = EShowWindowFlags.SW_NORMAL,
-			edmMinimized = EShowWindowFlags.SW_SHOWMINNOACTIVE,
-			edmMaximized = EShowWindowFlags.SW_MAXIMIZE
+			EdmNormal = EShowWindowFlags.SwNormal,
+			EdmMinimized = EShowWindowFlags.SwShowminnoactive,
+			EdmMaximized = EShowWindowFlags.SwMaximize
 		}
 		#endregion
 
 		#region Member Variables
 		// Use Unicode (W) under NT, otherwise use ANSI		
-		private IShellLinkW linkW;
-		private IShellLinkA linkA;
-		private string shortcutFile = "";
+		private IShellLinkW _linkW;
+		private IShellLinkA _linkA;
+		private string _shortcutFile = "";
 		#endregion
 
 		#region Constructor
@@ -408,11 +408,11 @@ namespace vbAccelerator.Components.Shell
 		{
 			if (System.Environment.OSVersion.Platform == PlatformID.Win32NT)
 			{
-				linkW = (IShellLinkW)new CShellLink();
+				_linkW = (IShellLinkW)new CShellLink();
 			}
 			else
 			{
-				linkA = (IShellLinkA)new CShellLink();
+				_linkA = (IShellLinkA)new CShellLink();
 			}
 		}
 
@@ -441,15 +441,15 @@ namespace vbAccelerator.Components.Shell
 		/// </summary>
 		public void Dispose()
 		{
-			if (linkW != null ) 
+			if (_linkW != null ) 
 			{
-				Marshal.ReleaseComObject(linkW);
-				linkW = null;
+				Marshal.ReleaseComObject(_linkW);
+				_linkW = null;
 			}
-			if (linkA != null)
+			if (_linkA != null)
 			{
-				Marshal.ReleaseComObject(linkA);
-				linkA = null;
+				Marshal.ReleaseComObject(_linkA);
+				_linkA = null;
 			}
 		}
 		#endregion
@@ -459,11 +459,11 @@ namespace vbAccelerator.Components.Shell
 		{
 			get
 			{
-				return this.shortcutFile;
+				return this._shortcutFile;
 			}
 			set
 			{
-				this.shortcutFile = value;
+				this._shortcutFile = value;
 			}
 		}
 
@@ -475,7 +475,7 @@ namespace vbAccelerator.Components.Shell
 		{
 			get
 			{
-				return getIcon(true);
+				return GetIcon(true);
 			}
 		}
 
@@ -483,22 +483,22 @@ namespace vbAccelerator.Components.Shell
 		{
 			get
 			{
-				return getIcon(false);
+				return GetIcon(false);
 			}
 		}
 
-		private Icon getIcon(bool large)
+		private Icon GetIcon(bool large)
 		{
 			// Get icon index and path:
 			int iconIndex = 0;
 			StringBuilder iconPath = new StringBuilder(260, 260);
-			if (linkA == null)
+			if (_linkA == null)
 			{
-				linkW.GetIconLocation(iconPath, iconPath.Capacity, out iconIndex);
+				_linkW.GetIconLocation(iconPath, iconPath.Capacity, out iconIndex);
 			}
 			else
 			{
-				linkA.GetIconLocation(iconPath, iconPath.Capacity, out iconIndex);
+				_linkA.GetIconLocation(iconPath, iconPath.Capacity, out iconIndex);
 			}
 			string iconFile = iconPath.ToString();
 
@@ -507,15 +507,15 @@ namespace vbAccelerator.Components.Shell
 			if (iconFile.Length == 0)
 			{
 				// Use the FileIcon object to get the icon:
-				FileIcon.SHGetFileInfoConstants flags = FileIcon.SHGetFileInfoConstants.SHGFI_ICON |
-					FileIcon.SHGetFileInfoConstants.SHGFI_ATTRIBUTES;
+				FileIcon.ShGetFileInfoConstants flags = FileIcon.ShGetFileInfoConstants.ShgfiIcon |
+					FileIcon.ShGetFileInfoConstants.ShgfiAttributes;
 				if (large)
 				{
-					flags = flags | FileIcon.SHGetFileInfoConstants.SHGFI_LARGEICON;
+					flags = flags | FileIcon.ShGetFileInfoConstants.ShgfiLargeicon;
 				}
 				else
 				{
-					flags = flags | FileIcon.SHGetFileInfoConstants.SHGFI_SMALLICON;
+					flags = flags | FileIcon.ShGetFileInfoConstants.ShgfiSmallicon;
 				}
 				FileIcon fileIcon = new FileIcon(Target, flags);
 				return fileIcon.ShellIcon;
@@ -563,13 +563,13 @@ namespace vbAccelerator.Components.Shell
 			{
 				StringBuilder iconPath = new StringBuilder(260, 260);
 				int iconIndex = 0;
-				if (linkA == null)
+				if (_linkA == null)
 				{
-					linkW.GetIconLocation(iconPath, iconPath.Capacity, out iconIndex);
+					_linkW.GetIconLocation(iconPath, iconPath.Capacity, out iconIndex);
 				}
 				else
 				{
-					linkA.GetIconLocation(iconPath, iconPath.Capacity, out iconIndex);
+					_linkA.GetIconLocation(iconPath, iconPath.Capacity, out iconIndex);
 				}
 				return iconPath.ToString();
 			}
@@ -577,21 +577,21 @@ namespace vbAccelerator.Components.Shell
 			{
 				StringBuilder iconPath = new StringBuilder(260, 260);
 				int iconIndex = 0;
-				if (linkA == null)
+				if (_linkA == null)
 				{
-					linkW.GetIconLocation(iconPath, iconPath.Capacity, out iconIndex);
+					_linkW.GetIconLocation(iconPath, iconPath.Capacity, out iconIndex);
 				}
 				else
 				{
-					linkA.GetIconLocation(iconPath, iconPath.Capacity, out iconIndex);
+					_linkA.GetIconLocation(iconPath, iconPath.Capacity, out iconIndex);
 				}
-				if (linkA == null)
+				if (_linkA == null)
 				{
-					linkW.SetIconLocation(value, iconIndex);
+					_linkW.SetIconLocation(value, iconIndex);
 				}
 				else
 				{
-					linkA.SetIconLocation(value, iconIndex);
+					_linkA.SetIconLocation(value, iconIndex);
 				}
 			}
 		}
@@ -605,13 +605,13 @@ namespace vbAccelerator.Components.Shell
 			{
 				StringBuilder iconPath = new StringBuilder(260, 260);
 				int iconIndex = 0;
-				if (linkA == null)
+				if (_linkA == null)
 				{
-					linkW.GetIconLocation(iconPath, iconPath.Capacity, out iconIndex);
+					_linkW.GetIconLocation(iconPath, iconPath.Capacity, out iconIndex);
 				}
 				else
 				{
-					linkA.GetIconLocation(iconPath, iconPath.Capacity, out iconIndex);
+					_linkA.GetIconLocation(iconPath, iconPath.Capacity, out iconIndex);
 				}
 				return iconIndex;
 			}
@@ -619,21 +619,21 @@ namespace vbAccelerator.Components.Shell
 			{
 				StringBuilder iconPath = new StringBuilder(260, 260);
 				int iconIndex = 0;
-				if (linkA == null)
+				if (_linkA == null)
 				{
-					linkW.GetIconLocation(iconPath, iconPath.Capacity, out iconIndex);
+					_linkW.GetIconLocation(iconPath, iconPath.Capacity, out iconIndex);
 				}
 				else
 				{
-					linkA.GetIconLocation(iconPath, iconPath.Capacity, out iconIndex);
+					_linkA.GetIconLocation(iconPath, iconPath.Capacity, out iconIndex);
 				}
-				if (linkA == null)
+				if (_linkA == null)
 				{
-					linkW.SetIconLocation(iconPath.ToString(), value);
+					_linkW.SetIconLocation(iconPath.ToString(), value);
 				}
 				else
 				{
-					linkA.SetIconLocation(iconPath.ToString(), value);
+					_linkA.SetIconLocation(iconPath.ToString(), value);
 				}
 			}
 		}
@@ -646,27 +646,27 @@ namespace vbAccelerator.Components.Shell
 			get
 			{		
 				StringBuilder target = new StringBuilder(260, 260);
-				if (linkA == null)
+				if (_linkA == null)
 				{
-					_WIN32_FIND_DATAW fd = new _WIN32_FIND_DATAW();
-					linkW.GetPath(target, target.Capacity, ref fd, (uint)EShellLinkGP.SLGP_UNCPRIORITY);
+					Win32FindDataw fd = new Win32FindDataw();
+					_linkW.GetPath(target, target.Capacity, ref fd, (uint)EShellLinkGp.SlgpUncpriority);
 				}
 				else
 				{
-					_WIN32_FIND_DATAA fd = new _WIN32_FIND_DATAA();
-					linkA.GetPath(target, target.Capacity, ref fd, (uint)EShellLinkGP.SLGP_UNCPRIORITY);
+					Win32FindDataa fd = new Win32FindDataa();
+					_linkA.GetPath(target, target.Capacity, ref fd, (uint)EShellLinkGp.SlgpUncpriority);
 				}
 				return target.ToString();
 			}
 			set
 			{
-				if (linkA == null)
+				if (_linkA == null)
 				{
-					linkW.SetPath(value);
+					_linkW.SetPath(value);
 				}
 				else
 				{
-					linkA.SetPath(value);
+					_linkA.SetPath(value);
 				}
 			}
 		}
@@ -679,25 +679,25 @@ namespace vbAccelerator.Components.Shell
 			get
 			{
 				StringBuilder path = new StringBuilder(260, 260);
-				if (linkA == null)
+				if (_linkA == null)
 				{
-					linkW.GetWorkingDirectory(path, path.Capacity);
+					_linkW.GetWorkingDirectory(path, path.Capacity);
 				}
 				else
 				{
-					linkA.GetWorkingDirectory(path, path.Capacity);
+					_linkA.GetWorkingDirectory(path, path.Capacity);
 				}
 				return path.ToString();
 			}
 			set
 			{
-				if (linkA == null)
+				if (_linkA == null)
 				{
-					linkW.SetWorkingDirectory(value);	
+					_linkW.SetWorkingDirectory(value);	
 				}
 				else
 				{
-					linkA.SetWorkingDirectory(value);
+					_linkA.SetWorkingDirectory(value);
 				}
 			}
 		}
@@ -710,25 +710,25 @@ namespace vbAccelerator.Components.Shell
 			get
 			{
 				StringBuilder description = new StringBuilder(1024, 1024);
-				if (linkA == null)
+				if (_linkA == null)
 				{
-					linkW.GetDescription(description, description.Capacity);
+					_linkW.GetDescription(description, description.Capacity);
 				}
 				else
 				{
-					linkA.GetDescription(description, description.Capacity);
+					_linkA.GetDescription(description, description.Capacity);
 				}
 				return description.ToString();
 			}
 			set
 			{
-				if (linkA == null)
+				if (_linkA == null)
 				{
-					linkW.SetDescription(value);
+					_linkW.SetDescription(value);
 				}
 				else
 				{
-					linkA.SetDescription(value);
+					_linkA.SetDescription(value);
 				}
 			}
 		}
@@ -741,25 +741,25 @@ namespace vbAccelerator.Components.Shell
 			get
 			{				
 				StringBuilder arguments = new StringBuilder(260, 260);
-				if (linkA == null)
+				if (_linkA == null)
 				{
-					linkW.GetArguments(arguments, arguments.Capacity);
+					_linkW.GetArguments(arguments, arguments.Capacity);
 				}
 				else
 				{
-					linkA.GetArguments(arguments, arguments.Capacity);
+					_linkA.GetArguments(arguments, arguments.Capacity);
 				}
 				return arguments.ToString();
 			}
 			set
 			{
-				if (linkA == null)
+				if (_linkA == null)
 				{
-					linkW.SetArguments(value);
+					_linkW.SetArguments(value);
 				}
 				else
 				{
-					linkA.SetArguments(value);
+					_linkA.SetArguments(value);
 				}
 			}
 		}
@@ -773,25 +773,25 @@ namespace vbAccelerator.Components.Shell
 			get
 			{
 				uint cmd = 0;
-				if (linkA == null)
+				if (_linkA == null)
 				{
-					linkW.GetShowCmd(out cmd);
+					_linkW.GetShowCmd(out cmd);
 				}
 				else
 				{
-					linkA.GetShowCmd(out cmd);
+					_linkA.GetShowCmd(out cmd);
 				}
 				return (LinkDisplayMode)cmd;
 			}
 			set
 			{
-				if (linkA == null)
+				if (_linkA == null)
 				{
-					linkW.SetShowCmd((uint)value);
+					_linkW.SetShowCmd((uint)value);
 				}
 				else
 				{
-					linkA.SetShowCmd((uint)value);
+					_linkA.SetShowCmd((uint)value);
 				}
 			}
 		}
@@ -804,25 +804,25 @@ namespace vbAccelerator.Components.Shell
 			get
 			{
 				short key = 0;
-				if (linkA == null)
+				if (_linkA == null)
 				{
-					linkW.GetHotkey(out key);
+					_linkW.GetHotkey(out key);
 				}
 				else
 				{
-					linkA.GetHotkey(out key);
+					_linkA.GetHotkey(out key);
 				}
 				return (Keys)key;
 			}
 			set
 			{
-				if (linkA == null)
+				if (_linkA == null)
 				{
-					linkW.SetHotkey((short)value);
+					_linkW.SetHotkey((short)value);
 				}
 				else
 				{
-					linkA.SetHotkey((short)value);
+					_linkA.SetHotkey((short)value);
 				}
 			}
 		}
@@ -832,7 +832,7 @@ namespace vbAccelerator.Components.Shell
 		/// </summary>
 		public void Save()
 		{
-			Save(shortcutFile);
+			Save(_shortcutFile);
 		}
 
 		/// <summary>
@@ -844,15 +844,15 @@ namespace vbAccelerator.Components.Shell
 			)
 		{   
 			// Save the object to disk
-			if (linkA == null)
+			if (_linkA == null)
 			{
-				((IPersistFile)linkW).Save(linkFile, true);
-				shortcutFile = linkFile;
+				((IPersistFile)_linkW).Save(linkFile, true);
+				_shortcutFile = linkFile;
 			}
 			else
 			{
-				((IPersistFile)linkA).Save(linkFile, true);
-                shortcutFile = linkFile;
+				((IPersistFile)_linkA).Save(linkFile, true);
+                _shortcutFile = linkFile;
 			}
 		}
 
@@ -866,7 +866,7 @@ namespace vbAccelerator.Components.Shell
 		{
 			Open(linkFile, 
 				IntPtr.Zero, 
-				(EShellLinkResolveFlags.SLR_ANY_MATCH | EShellLinkResolveFlags.SLR_NO_UI),
+				(EShellLinkResolveFlags.SlrAnyMatch | EShellLinkResolveFlags.SlrNoUi),
 				1);
 		}
 		
@@ -907,8 +907,8 @@ namespace vbAccelerator.Components.Shell
 		{
 			uint flags;
 
-			if ((resolveFlags & EShellLinkResolveFlags.SLR_NO_UI) 
-				== EShellLinkResolveFlags.SLR_NO_UI)
+			if ((resolveFlags & EShellLinkResolveFlags.SlrNoUi) 
+				== EShellLinkResolveFlags.SlrNoUi)
 			{
 				flags = (uint)((int)resolveFlags | (timeOut << 16));
 			}
@@ -917,17 +917,17 @@ namespace vbAccelerator.Components.Shell
 				flags = (uint)resolveFlags;
 			}
 
-			if (linkA == null)
+			if (_linkA == null)
 			{
-				((IPersistFile)linkW).Load(linkFile, 0); //STGM_DIRECT)
-				linkW.Resolve(hWnd, flags);
-				this.shortcutFile = linkFile;
+				((IPersistFile)_linkW).Load(linkFile, 0); //STGM_DIRECT)
+				_linkW.Resolve(hWnd, flags);
+				this._shortcutFile = linkFile;
 			}
 			else
 			{
-				((IPersistFile)linkA).Load(linkFile, 0); //STGM_DIRECT)
-				linkA.Resolve(hWnd, flags);
-				this.shortcutFile = linkFile;
+				((IPersistFile)_linkA).Load(linkFile, 0); //STGM_DIRECT)
+				_linkA.Resolve(hWnd, flags);
+				this._shortcutFile = linkFile;
 			}
 		}
 		#endregion

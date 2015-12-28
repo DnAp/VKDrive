@@ -30,15 +30,15 @@ namespace VKDrive
             try {
                 Application.Run(new Browser());
             }catch(Exception e) {
-                ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-                Log.Fatal("Main thread", e);
+                ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+                log.Fatal("Main thread", e);
             }
         }
 
         private static void ThreadException(object sender, ThreadExceptionEventArgs t)
         {
-            ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-            Log.Fatal(sender.ToString(), t.Exception);
+            ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+            log.Fatal(sender.ToString(), t.Exception);
         }
     }
 }

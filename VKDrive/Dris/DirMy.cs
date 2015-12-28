@@ -20,10 +20,10 @@ namespace VKDrive.Dris
             lock (RootNode)
             {
                 Folder folder = new Folder("Аудиозаписи");
-                folder.Property.Add("type", "AudioApi.executeGetAlbums");
+                folder.Property.Add("type", "AudioApi.ExecuteGetAlbums");
                 RootNode.Childs.Add(folder);
 
-                folder = new Folder("Фотографии", new Loader.VKontakte.Photos.GetAlbums(VKAPILibrary.Instance.UserID));
+                folder = new Folder("Фотографии", new Loader.VKontakte.Photos.GetAlbums(VkapiLibrary.Instance.UserId));
                 RootNode.Childs.Add(folder);
                 
                 RootNode.IsLoaded = true;
@@ -33,15 +33,15 @@ namespace VKDrive.Dris
         public override bool _LoadFile(Files.Folder file)
         {
             
-            if (file.Property["type"] == "AudioApi.executeGetAlbums")
+            if (file.Property["type"] == "AudioApi.ExecuteGetAlbums")
             {
-                AudioApi.executeGetAlbums(new Dictionary<string, string>(){
-				        {"owner_id", VKAPI.VKAPILibrary.Instance.UserID.ToString()}
+                AudioApi.ExecuteGetAlbums(new Dictionary<string, string>(){
+				        {"owner_id", VKAPI.VkapiLibrary.Instance.UserId.ToString()}
 			        }, file.Childs);
             }
             else if (file.Property["type"] == "audio.getInAlbum")
             {
-                AudioApi.loadMP3(new Dictionary<string, string>(){
+                AudioApi.LoadMp3(new Dictionary<string, string>(){
 				        {"owner_id", file.Property["uid"]},
                         { "album_id", file.Property["album_id"]}
 			        }, file.Childs);

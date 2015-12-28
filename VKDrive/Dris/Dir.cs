@@ -22,7 +22,7 @@ namespace VKDrive.Dris
             _LoadRootNode();
         }
 
-        public void clearCache()
+        public void ClearCache()
         {
             Directory = new Dictionary<string, object>();
             RootNode = new Folder("");
@@ -95,7 +95,7 @@ namespace VKDrive.Dris
 
 
                     //currentNode = currentNode.ChildNodes.First(value => value.Name == dirName);
-                    currentNode = ((Folder)currentNode).findInChilds(dirName);
+                    currentNode = ((Folder)currentNode).FindInChilds(dirName);
                     if (currentNode == null)
                     {
                         Console.WriteLine("Не нашел: " + pathString);
@@ -188,10 +188,10 @@ namespace VKDrive.Dris
             if (file.Length == 0 && file is Download)
             {
                 // Это нужно чтоб TC и другие наивные приложения читали корректное кол-во 
-                HttpWebRequest WebReq = (HttpWebRequest)WebRequest.Create(((Download)file).Url);
-                WebReq.Timeout = Properties.Settings.Default.Timeout * 1000;
-                WebReq.Method = "HEAD";
-                System.Net.WebResponse result = WebReq.GetResponse();
+                HttpWebRequest webReq = (HttpWebRequest)WebRequest.Create(((Download)file).Url);
+                webReq.Timeout = Properties.Settings.Default.Timeout * 1000;
+                webReq.Method = "HEAD";
+                System.Net.WebResponse result = webReq.GetResponse();
                 file.Length = result.ContentLength;
                 result.Close();
             }

@@ -59,5 +59,59 @@ namespace VKDrive.Properties {
                 resourceCulture = value;
             }
         }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Доступ запрещeн.
+        /// </summary>
+        internal static string AccessDenied {
+            get {
+                return ResourceManager.GetString("AccessDenied", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Кончились места для жестких дисков. Отключите что-то и перезапустите VKDrive..
+        /// </summary>
+        internal static string Browser_Browser_Load_BusyAllDrivers {
+            get {
+                return ResourceManager.GetString("Browser_Browser_Load_BusyAllDrivers", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на ВКонтакте рассказал мне страшную историю: общий смысл сводится к тому что тебе нужно зайти на https://vk.com/.
+        /// </summary>
+        internal static string Browser_webBrowser1_DocumentCompleted_Banned {
+            get {
+                return ResourceManager.GetString("Browser_webBrowser1_DocumentCompleted_Banned", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Ошибка {0}.
+        /// </summary>
+        internal static string ErrorN {
+            get {
+                return ResourceManager.GetString("ErrorN", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Ошибка.
+        /// </summary>
+        internal static string Message_Error {
+            get {
+                return ResourceManager.GetString("Message_Error", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Неизвестная ошибка.
+        /// </summary>
+        internal static string UnknownError {
+            get {
+                return ResourceManager.GetString("UnknownError", resourceCulture);
+            }
+        }
     }
 }

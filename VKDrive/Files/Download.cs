@@ -20,9 +20,9 @@ namespace VKDrive.Files
             return regexp.Replace(fileName, "").TrimEnd('.').Trim();
         }
 
-        public abstract bool update();
+        public abstract bool Update();
         //public abstract string getUniqueId();
 
-        public abstract int[] getUniqueId();
+        public abstract int[] GetUniqueId();
     }
 }

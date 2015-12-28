@@ -1,13 +1,6 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json.Linq;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml;
-using System.Xml.Linq;
 using VKDrive.Files;
 using VKDrive.VKAPI;
 
@@ -15,8 +8,8 @@ namespace VKDrive.API
 {
     class AudioApi
     {
-        public const int LOADER_AUDIO = 1;
-        public const int WAIT = 2;
+        public const int LoaderAudio = 1;
+        public const int Wait = 2;
 
         /// <summary>
         /// Грузим рекурсивно альбомы по 100 штук
@@ -26,7 +19,7 @@ namespace VKDrive.API
         /// <param name="files"></param>
         /// <param name="max"></param>
         /// <returns></returns>
-        private static bool executeGetAlbumsRecursive(Dictionary<int, Folder> albumsKeyValue, Dictionary<string, string> param,
+        private static bool ExecuteGetAlbumsRecursive(Dictionary<int, Folder> albumsKeyValue, Dictionary<string, string> param,
                                             IList<VFile> files, int max, bool waitParam)
         {
             if (max > albumsKeyValue.Count || max == -1)
@@ -39,7 +32,7 @@ namespace VKDrive.API
 
                 Folder fileNode;
 
-                JObject apiRequest = (JObject)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("audio.getAlbums", paramSend));
+                JObject apiRequest = (JObject)VKAPI.Vkapi.Instance.StartTaskSync(new VKAPI.ApiQuery("audio.getAlbums", paramSend));
                 
                 JArray items = (JArray)apiRequest.GetValue("items");
                 if (items!=null && items.Count > 0)
@@ -68,14 +61,14 @@ namespace VKDrive.API
                 
                 if (max > -1)
                 {
-                    executeGetAlbumsRecursive(albumsKeyValue, param, files, max, waitParam);
+                    ExecuteGetAlbumsRecursive(albumsKeyValue, param, files, max, waitParam);
                 }
             }
 
             return true;
         }
 
-        public static int executeGetAlbums(Dictionary<string, string> param, IList<VFile> files)
+        public static int ExecuteGetAlbums(Dictionary<string, string> param, IList<VFile> files)
         {
             Dictionary<int, Folder> albumsKeyValue = new Dictionary<int, Folder>();
             Folder fileNode;
@@ -83,9 +76,9 @@ namespace VKDrive.API
             Dictionary<string, string> paramSend = new Dictionary<string, string>(param);
             paramSend.Add("count", "100");
 
-            int audioCount = getCount(param);
+            int audioCount = GetCount(param);
 
-            executeGetAlbumsRecursive(albumsKeyValue, paramSend, files, -1, audioCount <= 5000);
+            ExecuteGetAlbumsRecursive(albumsKeyValue, paramSend, files, -1, audioCount <= 5000);
             if (albumsKeyValue.Count > 0)
             {
                 if (audioCount <= 5000) // это максимум вк, если больше то нужно получать альбомами
@@ -96,30 +89,30 @@ namespace VKDrive.API
                     files.Add(fileNode);
                     albumsKeyValue.Add(0, fileNode);
                     // Теперь мы свободны и запускаем в отдельном потоке загрузку музыки
-                    new ThreadExecutor().Execute(() => loadMP3(param, files, albumsKeyValue, audioCount));
+                    new ThreadExecutor().Execute(() => LoadMp3(param, files, albumsKeyValue, audioCount));
                 }
             }
             else
             {
-                loadMP3(param, files, albumsKeyValue, audioCount);
+                LoadMp3(param, files, albumsKeyValue, audioCount);
             }
 
             return 0;
         }
 
-        protected static int getCount(Dictionary<string, string> param)
+        protected static int GetCount(Dictionary<string, string> param)
         {
             Dictionary<string, string> p = new Dictionary<string, string>();
             p.Add("owner_id", param["owner_id"]);
-            return VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("audio.getCount", p)).ToObject<int>();
+            return VKAPI.Vkapi.Instance.StartTaskSync(new VKAPI.ApiQuery("audio.GetCount", p)).ToObject<int>();
         }
 
-        public static void loadMP3(Dictionary<string, string> param, IList<VFile> files)
+        public static void LoadMp3(Dictionary<string, string> param, IList<VFile> files)
         {
-            loadMP3(param, files, new Dictionary<int, Folder>(), 500);
+            LoadMp3(param, files, new Dictionary<int, Folder>(), 500);
         }
 
-        protected static void loadMP3(Dictionary<string, string> param, IList<VFile> files, Dictionary<int, Folder> albumsKeyValue, int audioCount)
+        protected static void LoadMp3(Dictionary<string, string> param, IList<VFile> files, Dictionary<int, Folder> albumsKeyValue, int audioCount)
         {
             // второй уровень
             int countOnStep = 500; // Сколько забирать за шаг
@@ -133,7 +126,7 @@ namespace VKDrive.API
             for (int page = 0; page < pageCount; page++)
             {
                 paramSend["offset"] = (page * countOnStep).ToString();
-                JObject apiRequest = (JObject)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("audio.get", paramSend));
+                JObject apiRequest = (JObject)VKAPI.Vkapi.Instance.StartTaskSync(new VKAPI.ApiQuery("audio.get", paramSend));
                 JArray items = (JArray)apiRequest.GetValue("items");
                 foreach (JToken item in items)
                 {

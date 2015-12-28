@@ -10,19 +10,19 @@ namespace VKDrive.Files
 {
     public class Mp3 : Download
     {
-        public int UID = 0;
-        public int AID = 0;
+        public int Uid = 0;
+        public int Aid = 0;
         public short Duration = 0;
 
-        private readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private readonly ILog _log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         public Mp3(SerializationObject.Audio curAudio) : base("")
         {
             FileName = Mp3.EscapeFileName(curAudio.Artist + " - " + curAudio.Title) + ".mp3";
             Url = curAudio.Url;
-            UID = curAudio.OwnerId;
-            AID = curAudio.Id;
-            Log.Debug("Make mp3 " + FileName + " : "+Url);
+            Uid = curAudio.OwnerId;
+            Aid = curAudio.Id;
+            _log.Debug("Make mp3 " + FileName + " : "+Url);
         }
 
         public override int ReadFile(
@@ -31,7 +31,7 @@ namespace VKDrive.Files
             long offset,
             Dokan.DokanFileInfo info)
         {
-            int res = DownloadManager.Instance.getBlock(this, buffer, ref readBytes, offset);
+            int res = DownloadManager.Instance.GetBlock(this, buffer, ref readBytes, offset);
             return res;
         }
 
@@ -40,19 +40,19 @@ namespace VKDrive.Files
             return "aid" + UID +"_"+ AID;
         }*/
 
-        public override int[] getUniqueId()
+        public override int[] GetUniqueId()
         {
-            return new int[] { UID, AID };
+            return new int[] { Uid, Aid };
         }
 
-        public override bool update()
+        public override bool Update()
         {
-            if (AID == 0)
+            if (Aid == 0)
                 return false;
             try
             {
-                Dictionary<string, string> param = new Dictionary<string, string>() { { "audios", AID.ToString() } };
-                JArray apiResult = (JArray)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("audio.getById", param));
+                Dictionary<string, string> param = new Dictionary<string, string>() { { "audios", Aid.ToString() } };
+                JArray apiResult = (JArray)VKAPI.Vkapi.Instance.StartTaskSync(new VKAPI.ApiQuery("audio.getById", param));
                 Url = apiResult[0].ToObject<SerializationObject.Audio>().Url;
                 CreationTime = DateTime.Now;
             }
@@ -67,8 +67,8 @@ namespace VKDrive.Files
         {
             FileName = Mp3.EscapeFileName(attr.Element("artist").Value + " - " + attr.Element("title").Value) + ".mp3";
             Url = (string)attr.Element("url");
-            UID = Convert.ToInt32(attr.Element("owner_id").Value);
-            AID = Convert.ToInt32(attr.Element("aid").Value);
+            Uid = Convert.ToInt32(attr.Element("owner_id").Value);
+            Aid = Convert.ToInt32(attr.Element("aid").Value);
         }
 
     }

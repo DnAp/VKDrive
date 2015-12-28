@@ -12,15 +12,15 @@ namespace vbAccelerator.Components.Shell
 	{
 
 		#region UnmanagedCode
-		private const int MAX_PATH = 260;
+		private const int MaxPath = 260;
 		
 		[StructLayout(LayoutKind.Sequential)]
-		private struct SHFILEINFO
+		private struct Shfileinfo
 		{
 			public IntPtr hIcon;
 			public int iIcon;
 			public int dwAttributes;
-			[MarshalAs(UnmanagedType.ByValTStr, SizeConst=MAX_PATH)]
+			[MarshalAs(UnmanagedType.ByValTStr, SizeConst=MaxPath)]
 			public string szDisplayName;
 			[MarshalAs(UnmanagedType.ByValTStr, SizeConst=80)]
 			public string szTypeName;
@@ -30,20 +30,20 @@ namespace vbAccelerator.Components.Shell
 	private static extern int SHGetFileInfo (
 			string pszPath, 
 			int dwFileAttributes,
-			ref SHFILEINFO psfi, 
+			ref Shfileinfo psfi, 
 			uint cbFileInfo, 
 			uint uFlags);
 
 		[DllImport("user32.dll")]
 		private static extern int DestroyIcon(IntPtr hIcon);
 
-		private const int FORMAT_MESSAGE_ALLOCATE_BUFFER = 0x100; 
-		private const int FORMAT_MESSAGE_ARGUMENT_ARRAY = 0x2000;
-		private const int FORMAT_MESSAGE_FROM_HMODULE = 0x800;
-		private const int FORMAT_MESSAGE_FROM_STRING = 0x400;
-		private const int FORMAT_MESSAGE_FROM_SYSTEM = 0x1000;
-		private const int FORMAT_MESSAGE_IGNORE_INSERTS = 0x200;
-		private const int FORMAT_MESSAGE_MAX_WIDTH_MASK = 0xFF;
+		private const int FormatMessageAllocateBuffer = 0x100; 
+		private const int FormatMessageArgumentArray = 0x2000;
+		private const int FormatMessageFromHmodule = 0x800;
+		private const int FormatMessageFromString = 0x400;
+		private const int FormatMessageFromSystem = 0x1000;
+		private const int FormatMessageIgnoreInserts = 0x200;
+		private const int FormatMessageMaxWidthMask = 0xFF;
         [DllImport("kernel32")]
 		private extern static int FormatMessage (
 			int dwFlags, 
@@ -59,35 +59,35 @@ namespace vbAccelerator.Components.Shell
 		#endregion
 		
 		#region Member Variables
-		private string fileName;
-		private string displayName;
-		private string typeName;
-		private SHGetFileInfoConstants flags;
-		private Icon fileIcon;
+		private string _fileName;
+		private string _displayName;
+		private string _typeName;
+		private ShGetFileInfoConstants _flags;
+		private Icon _fileIcon;
 		#endregion
 
 		#region Enumerations
 		[Flags]		
-			public enum SHGetFileInfoConstants : int
+			public enum ShGetFileInfoConstants : int
 		{
-			SHGFI_ICON = 0x100,                // get icon 
-			SHGFI_DISPLAYNAME = 0x200,         // get display name 
-			SHGFI_TYPENAME = 0x400,            // get type name 
-			SHGFI_ATTRIBUTES = 0x800,          // get attributes 
-			SHGFI_ICONLOCATION = 0x1000,       // get icon location 
-			SHGFI_EXETYPE = 0x2000,            // return exe type 
-			SHGFI_SYSICONINDEX = 0x4000,       // get system icon index 
-			SHGFI_LINKOVERLAY = 0x8000,        // put a link overlay on icon 
-			SHGFI_SELECTED = 0x10000,          // show icon in selected state 
-			SHGFI_ATTR_SPECIFIED = 0x20000,    // get only specified attributes 
-			SHGFI_LARGEICON = 0x0,             // get large icon 
-			SHGFI_SMALLICON = 0x1,             // get small icon 
-			SHGFI_OPENICON = 0x2,              // get open icon 
-			SHGFI_SHELLICONSIZE = 0x4,         // get shell size icon 
+			ShgfiIcon = 0x100,                // get icon 
+			ShgfiDisplayname = 0x200,         // get display name 
+			ShgfiTypename = 0x400,            // get type name 
+			ShgfiAttributes = 0x800,          // get attributes 
+			ShgfiIconlocation = 0x1000,       // get icon location 
+			ShgfiExetype = 0x2000,            // return exe type 
+			ShgfiSysiconindex = 0x4000,       // get system icon index 
+			ShgfiLinkoverlay = 0x8000,        // put a link overlay on icon 
+			ShgfiSelected = 0x10000,          // show icon in selected state 
+			ShgfiAttrSpecified = 0x20000,    // get only specified attributes 
+			ShgfiLargeicon = 0x0,             // get large icon 
+			ShgfiSmallicon = 0x1,             // get small icon 
+			ShgfiOpenicon = 0x2,              // get open icon 
+			ShgfiShelliconsize = 0x4,         // get shell size icon 
 			//SHGFI_PIDL = 0x8,                  // pszPath is a pidl 
-			SHGFI_USEFILEATTRIBUTES = 0x10,     // use passed dwFileAttribute 
-			SHGFI_ADDOVERLAYS = 0x000000020,     // apply the appropriate overlays
-			SHGFI_OVERLAYINDEX = 0x000000040     // Get the index of the overlay
+			ShgfiUsefileattributes = 0x10,     // use passed dwFileAttribute 
+			ShgfiAddoverlays = 0x000000020,     // apply the appropriate overlays
+			ShgfiOverlayindex = 0x000000040     // Get the index of the overlay
 		}
 		#endregion
 
@@ -95,15 +95,15 @@ namespace vbAccelerator.Components.Shell
 		/// <summary>
 		/// Gets/sets the flags used to extract the icon
 		/// </summary>
-		public FileIcon.SHGetFileInfoConstants Flags
+		public FileIcon.ShGetFileInfoConstants Flags
 		{
 			get
 			{
-				return flags;
+				return _flags;
 			}
 			set
 			{
-				flags = value;
+				_flags = value;
 			}
 		}
 
@@ -114,11 +114,11 @@ namespace vbAccelerator.Components.Shell
 		{
 			get
 			{
-				return fileName;
+				return _fileName;
 			}
 			set
 			{
-				fileName = value;
+				_fileName = value;
 			}
 		}
 
@@ -129,7 +129,7 @@ namespace vbAccelerator.Components.Shell
 		{
 			get
 			{
-				return fileIcon;
+				return _fileIcon;
 			}
 		}
 
@@ -141,7 +141,7 @@ namespace vbAccelerator.Components.Shell
 		{
 			get
 			{
-				return displayName;
+				return _displayName;
 			}
 		}
 
@@ -153,7 +153,7 @@ namespace vbAccelerator.Components.Shell
 		{
 			get
 			{
-				return typeName;
+				return _typeName;
 			}
 		}
 
@@ -163,25 +163,25 @@ namespace vbAccelerator.Components.Shell
 		/// </summary>
 		public void GetInfo()
 		{
-			fileIcon = null;
-			typeName = "";
-			displayName = "";
+			_fileIcon = null;
+			_typeName = "";
+			_displayName = "";
 
-			SHFILEINFO shfi = new SHFILEINFO();
+			Shfileinfo shfi = new Shfileinfo();
 			uint shfiSize = (uint)Marshal.SizeOf(shfi.GetType());
 
 			int ret = SHGetFileInfo(
-				fileName, 0, ref shfi, shfiSize, (uint)(flags));
+				_fileName, 0, ref shfi, shfiSize, (uint)(_flags));
 			if (ret != 0)
 			{
 				if (shfi.hIcon != IntPtr.Zero)
 				{
-					fileIcon = System.Drawing.Icon.FromHandle(shfi.hIcon);
+					_fileIcon = System.Drawing.Icon.FromHandle(shfi.hIcon);
 					// Now owned by the GDI+ object
 					//DestroyIcon(shfi.hIcon);
 				}
-				typeName = shfi.szTypeName;
-				displayName = shfi.szDisplayName;
+				_typeName = shfi.szTypeName;
+				_displayName = shfi.szDisplayName;
 			}
 			else
 			{
@@ -190,7 +190,7 @@ namespace vbAccelerator.Components.Shell
 				Console.WriteLine("Error {0}", err);
 				string txtS = new string('\0', 256);
 				int len = FormatMessage(
-					FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+					FormatMessageFromSystem | FormatMessageIgnoreInserts,
 					IntPtr.Zero, err, 0, txtS, 256, 0);
 				Console.WriteLine("Len {0} text {1}", len, txtS);
 
@@ -206,11 +206,11 @@ namespace vbAccelerator.Components.Shell
 		/// </summary>
 		public FileIcon()
 		{
-			flags = SHGetFileInfoConstants.SHGFI_ICON | 
-				SHGetFileInfoConstants.SHGFI_DISPLAYNAME |
-				SHGetFileInfoConstants.SHGFI_TYPENAME |
-				SHGetFileInfoConstants.SHGFI_ATTRIBUTES |
-				SHGetFileInfoConstants.SHGFI_EXETYPE;
+			_flags = ShGetFileInfoConstants.ShgfiIcon | 
+				ShGetFileInfoConstants.ShgfiDisplayname |
+				ShGetFileInfoConstants.ShgfiTypename |
+				ShGetFileInfoConstants.ShgfiAttributes |
+				ShGetFileInfoConstants.ShgfiExetype;
 		}
 		/// <summary>
 		/// Constructs a new instance of the FileIcon class
@@ -221,7 +221,7 @@ namespace vbAccelerator.Components.Shell
 		/// display name and type name for</param>
 		public FileIcon(string fileName) : this()
 		{
-			this.fileName = fileName;
+			this._fileName = fileName;
 			GetInfo();
 		}
 		/// <summary>
@@ -233,10 +233,10 @@ namespace vbAccelerator.Components.Shell
 		/// for</param>
 		/// <param name="flags">The flags to use when extracting the
 		/// icon and other shell information.</param>
-		public FileIcon(string fileName, FileIcon.SHGetFileInfoConstants flags)
+		public FileIcon(string fileName, FileIcon.ShGetFileInfoConstants flags)
 		{
-			this.fileName = fileName;
-			this.flags = flags;
+			this._fileName = fileName;
+			this._flags = flags;
 			GetInfo();
 		}
 

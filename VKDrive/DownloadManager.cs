@@ -24,11 +24,11 @@ namespace VKDrive
         protected Object FStreamLock;
         protected string CacheFileName;
 
-        const int STATUS_PROCESS = 1;
-        const int STATUS_OK = 2;
-        const int STATUS_ERROR = 3;
+        const int StatusProcess = 1;
+        const int StatusOk = 2;
+        const int StatusError = 3;
 
-        private readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private readonly ILog _log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         protected DownloadManager()
         {
@@ -61,16 +61,16 @@ namespace VKDrive
             get { return SingletonCreator.Instance; }
         }
 
-        private int getBlockId(long offset)
+        private int GetBlockId(long offset)
         {
             decimal d = offset / DownloadBlockSize;
             return System.Convert.ToInt32(Math.Ceiling(d));
         }
 
 
-        public int getBlock(Download finfo, byte[] buffer, ref uint readBytes, long offset)
+        public int GetBlock(Download finfo, byte[] buffer, ref uint readBytes, long offset)
         {
-            Log.Debug("DM: c " + offset + " читать " + buffer.Length);
+            _log.Debug("DM: c " + offset + " читать " + buffer.Length);
             #region Получение первичной информации
             try
             {
@@ -79,10 +79,10 @@ namespace VKDrive
                     // кажись это нафик не нужный код
                     if (finfo.Length == 0)
                     {
-                        HttpWebRequest WebReq = (HttpWebRequest)WebRequest.Create(finfo.Url);
-                        WebReq.Timeout = Properties.Settings.Default.Timeout * 1000;
-                        WebReq.Method = "HEAD";
-                        System.Net.WebResponse result = WebReq.GetResponse();
+                        HttpWebRequest webReq = (HttpWebRequest)WebRequest.Create(finfo.Url);
+                        webReq.Timeout = Properties.Settings.Default.Timeout * 1000;
+                        webReq.Method = "HEAD";
+                        System.Net.WebResponse result = webReq.GetResponse();
                         finfo.Length = result.ContentLength;
                         result.Close();
                     }
@@ -111,8 +111,8 @@ namespace VKDrive
                 numByteToRead = finfo.Length;
             }
             
-            int blockIdStart = getBlockId(offset);
-            int blockIdEnd = getBlockId(numByteToRead - 1);
+            int blockIdStart = GetBlockId(offset);
+            int blockIdEnd = GetBlockId(numByteToRead - 1);
             // Здесь -1, потомучто мы запрашиваем с 4 байта 4 байта.
             // Нам нужны 4,5,6,7. А если мы сложим 4+4 получим 8. Лишний байт может вызывать докачку блока.
 
@@ -124,8 +124,8 @@ namespace VKDrive
             // Console.WriteLine("End block" + endBlockToRead);
             try
             {
-                Log.Debug("Readed: " + blockIdStart + ".." + blockIdEnd);
-                startBlockDownload(finfo, blockIdStart, blockIdEnd);
+                _log.Debug("Readed: " + blockIdStart + ".." + blockIdEnd);
+                StartBlockDownload(finfo, blockIdStart, blockIdEnd);
             }
             catch (Exception)
             {
@@ -137,22 +137,22 @@ namespace VKDrive
 
             Dictionary<int, int[]> positionBlock = new Dictionary<int, int[]>();
 
-            int[] fileUID = finfo.getUniqueId();
+            int[] fileUid = finfo.GetUniqueId();
 
             counter = 0;
                 
             // todo Раньше тут была интересная штука чтоб отдавать последний блок когда его еще не докачали 
             while (true)
             {
-                SQLiteDataReader rows = DB.Instance.Execute(@"SELECT COUNT(*) FROM file_parts 
-                    WHERE uid = " + fileUID[0] + " AND fid=" + fileUID[1] + " AND block_id>=" + blockIdStart 
-                                    + " AND block_id<=" + blockIdEnd + " AND status = " + STATUS_PROCESS);
+                SQLiteDataReader rows = Db.Instance.Execute(@"SELECT COUNT(*) FROM file_parts 
+                    WHERE uid = " + fileUid[0] + " AND fid=" + fileUid[1] + " AND block_id>=" + blockIdStart 
+                                    + " AND block_id<=" + blockIdEnd + " AND status = " + StatusProcess);
                 if (rows.Read() && rows.GetInt32(0) == 0)
                 {
                     // Все блоки переключили статус на зачачено
-                    rows = DB.Instance.Execute("SELECT block_id, byte, byte_offset FROM file_parts "
-                        + " WHERE uid = " + fileUID[0] + " AND fid=" + fileUID[1] + " AND block_id>=" + blockIdStart
-                        + " AND block_id<=" + blockIdEnd + " AND status = " + STATUS_OK);
+                    rows = Db.Instance.Execute("SELECT block_id, byte, byte_offset FROM file_parts "
+                        + " WHERE uid = " + fileUid[0] + " AND fid=" + fileUid[1] + " AND block_id>=" + blockIdStart
+                        + " AND block_id<=" + blockIdEnd + " AND status = " + StatusOk);
                     while (rows.Read())
                     {
                         positionBlock.Add(
@@ -171,7 +171,7 @@ namespace VKDrive
                 counter++;
                 if (counter == 20 * (blockIdEnd - blockIdStart + 1))
                 {
-                    Log.Warn("Длительное ожидание файла");
+                    _log.Warn("Длительное ожидание файла");
                 }
                     
                 Thread.Sleep(Properties.Settings.Default.DownloadSleepTimeout);
@@ -209,7 +209,7 @@ namespace VKDrive
                             count = positionBlock[blockId][0];
                         }
                     }
-                    Log.Debug("Переписываем из файла с " + FStream.Position + ", блок длинной " + count);
+                    _log.Debug("Переписываем из файла с " + FStream.Position + ", блок длинной " + count);
                     readBytes += (uint)FStream.Read(
                         buffer,
                         Convert.ToInt32(readBytes),
@@ -218,17 +218,17 @@ namespace VKDrive
                 }
 
             }
-            Log.Debug("Итого отдали " + readBytes + " из " + buffer.Length + " запрашиваемых");
+            _log.Debug("Итого отдали " + readBytes + " из " + buffer.Length + " запрашиваемых");
 
             return DokanNet.DOKAN_SUCCESS;
         }
 
-        private void startBlockDownload(Download finfo, int blockIdStart, int blockIdEnd)
+        private void StartBlockDownload(Download finfo, int blockIdStart, int blockIdEnd)
         {
             
             //Console.WriteLine(finfo.FileName + "\t" + blockIdStart + ".." + blockIdEnd+"\t\t"+finfo.Url);
             List<int[]> blockToDownload = new List<int[]>();
-            int[] tmp = finfo.getUniqueId();
+            int[] tmp = finfo.GetUniqueId();
             if (tmp.Count() < 2)
                 return;
 
@@ -240,15 +240,15 @@ namespace VKDrive
                 {
                     download = Convert.ToInt32(finfo.Length) - (DownloadBlockSize * blockId);
                 }
-                SQLiteDataReader result = DB.Instance.Execute("INSERT OR IGNORE INTO file_parts "
+                SQLiteDataReader result = Db.Instance.Execute("INSERT OR IGNORE INTO file_parts "
                     + "( uid, fid, block_id, byte, byte_offset, status ) VALUES "
                     + "( " + tmp[0] + ", " + tmp[1] + ", " + blockId.ToString() + ", "
-                    + download + ", (SELECT max(byte_offset) FROM file_parts) + " + DownloadBlockSize + ", "+STATUS_PROCESS+")");
+                    + download + ", (SELECT max(byte_offset) FROM file_parts) + " + DownloadBlockSize + ", "+StatusProcess+")");
 
                 if (result.RecordsAffected == 0)// Означает что такая задача на закачку уже есть
                 {
                     // Пытаемся обновить если таск ошибочный, мы выставим его на работу
-                    result = DB.Instance.Execute("UPDATE file_parts SET status = "+STATUS_PROCESS+" WHERE uid = " + tmp[0] + " AND fid=" + tmp[1] + " AND block_id=" + blockId.ToString()+" AND status="+STATUS_ERROR);
+                    result = Db.Instance.Execute("UPDATE file_parts SET status = "+StatusProcess+" WHERE uid = " + tmp[0] + " AND fid=" + tmp[1] + " AND block_id=" + blockId.ToString()+" AND status="+StatusError);
                     if (result.RecordsAffected == 0) // Нет ошибок, кто-то уже работает над этим, подождем
                     {
                         if (between != null)
@@ -272,62 +272,62 @@ namespace VKDrive
                 blockToDownload.Add(between);
 
             // Стартуем закачку
-            foreach (int[] DMBlocksBetween in blockToDownload)
+            foreach (int[] dmBlocksBetween in blockToDownload)
             {
                 
-                new ThreadExecutor().Execute(() => DownloadThread(DMBlocksBetween, finfo));
+                new ThreadExecutor().Execute(() => DownloadThread(dmBlocksBetween, finfo));
             }
             
         }
 
-        static void DownloadThread(int[] DMBlockBetween, Download finfo)
+        static void DownloadThread(int[] dmBlockBetween, Download finfo)
         {
-            Thread.CurrentThread.Name = "DownloadThread: " + finfo.FileName + " Block: " + DMBlockBetween[0] + "-"+DMBlockBetween[1];
+            Thread.CurrentThread.Name = "DownloadThread: " + finfo.FileName + " Block: " + dmBlockBetween[0] + "-"+dmBlockBetween[1];
             
-            DownloadManager DM = DownloadManager.Instance;
-            int blockIdStart = DMBlockBetween[0];
-            int blockIdEnd = DMBlockBetween[1];
+            DownloadManager dm = DownloadManager.Instance;
+            int blockIdStart = dmBlockBetween[0];
+            int blockIdEnd = dmBlockBetween[1];
 
             // Организовываем закачку
             //Console.WriteLine(finfo.Url);
             
             int blockId = blockIdStart;
 
-            int[] fileUID = finfo.getUniqueId();
-            SQLiteDataReader rows = DB.Instance.Execute(@"SELECT block_id, byte_offset FROM file_parts 
-                        WHERE uid = " + fileUID[0] + " AND fid=" + fileUID[1] + " AND block_id>=" + blockIdStart + " AND block_id<=" + blockIdEnd);
+            int[] fileUid = finfo.GetUniqueId();
+            SQLiteDataReader rows = Db.Instance.Execute(@"SELECT block_id, byte_offset FROM file_parts 
+                        WHERE uid = " + fileUid[0] + " AND fid=" + fileUid[1] + " AND block_id>=" + blockIdStart + " AND block_id<=" + blockIdEnd);
             
             Dictionary<int, int> positionBlock = new Dictionary<int,int>();
             int maxPosition = 0;
-            int byte_offset;
+            int byteOffset;
             while (rows.Read())
             {
-                byte_offset = rows.GetInt32(1);
-                positionBlock.Add(rows.GetInt32(0), byte_offset);
-                if (maxPosition < byte_offset)
-                    maxPosition = byte_offset;
+                byteOffset = rows.GetInt32(1);
+                positionBlock.Add(rows.GetInt32(0), byteOffset);
+                if (maxPosition < byteOffset)
+                    maxPosition = byteOffset;
             }
-            lock (DM.FStreamLock)
+            lock (dm.FStreamLock)
             {
-                Console.WriteLine("Файл занимает: " + DM.FStream.Length + ". Максимальная позиция: " + (maxPosition + DM.DownloadBlockSize));
-                if (DM.FStream.Length < maxPosition + DM.DownloadBlockSize)
+                Console.WriteLine("Файл занимает: " + dm.FStream.Length + ". Максимальная позиция: " + (maxPosition + dm.DownloadBlockSize));
+                if (dm.FStream.Length < maxPosition + dm.DownloadBlockSize)
                 {
-                    SQLiteDataReader data = DB.Instance.Execute("SELECT max(byte_offset) FROM file_parts");
+                    SQLiteDataReader data = Db.Instance.Execute("SELECT max(byte_offset) FROM file_parts");
                     data.Read();
-                    DM.FStream.SetLength(data.GetInt32(0) + DM.DownloadBlockSize);
+                    dm.FStream.SetLength(data.GetInt32(0) + dm.DownloadBlockSize);
                 }
             }
 
             try
             {
                 
-                HttpWebRequest WebReq = (HttpWebRequest)WebRequest.Create(finfo.Url);
-                WebReq.Timeout = Properties.Settings.Default.Timeout * 1000;
-                WebReq.AddRange(blockIdStart * DM.DownloadBlockSize, (blockIdEnd + 1) * DM.DownloadBlockSize);
+                HttpWebRequest webReq = (HttpWebRequest)WebRequest.Create(finfo.Url);
+                webReq.Timeout = Properties.Settings.Default.Timeout * 1000;
+                webReq.AddRange(blockIdStart * dm.DownloadBlockSize, (blockIdEnd + 1) * dm.DownloadBlockSize);
 
                 //Console.WriteLine("Start downdload: " + finfo.FileName+"\t" + blockIdStart + ".." + blockIdEnd + "\t\t" + finfo.Url);
             
-                System.Net.WebResponse result = WebReq.GetResponse();
+                System.Net.WebResponse result = webReq.GetResponse();
 
                 System.IO.Stream stream = result.GetResponseStream();
                 
@@ -341,17 +341,17 @@ namespace VKDrive
                 {
                     read = stream.Read(bufferWritter, 0, bufferWritter.Length);
                     
-                    lock (DM.FStreamLock)
+                    lock (dm.FStreamLock)
                     {
 
-                        DM.FStream.Position = positionBlock[blockId] + downloaded;
-                        if (downloaded + read > DM.DownloadBlockSize)
+                        dm.FStream.Position = positionBlock[blockId] + downloaded;
+                        if (downloaded + read > dm.DownloadBlockSize)
                         {
-                            if (DM.DownloadBlockSize - downloaded > 0)
+                            if (dm.DownloadBlockSize - downloaded > 0)
                             {
-                                DM.FStream.Write(bufferWritter, 0, DM.DownloadBlockSize - downloaded);
+                                dm.FStream.Write(bufferWritter, 0, dm.DownloadBlockSize - downloaded);
                             }
-                            skipRead = DM.DownloadBlockSize - downloaded;
+                            skipRead = dm.DownloadBlockSize - downloaded;
 
                             downloaded = 0;
                             
@@ -359,19 +359,19 @@ namespace VKDrive
                             {
                                 break;
                             }
-                            DB.Instance.Execute("UPDATE file_parts SET status = " + STATUS_OK 
-                                + " WHERE uid = " + fileUID[0] + " AND fid=" + fileUID[1] + " AND block_id = " + blockId);
+                            Db.Instance.Execute("UPDATE file_parts SET status = " + StatusOk 
+                                + " WHERE uid = " + fileUid[0] + " AND fid=" + fileUid[1] + " AND block_id = " + blockId);
                             
                             blockId++;
-                            DM.FStream.Position = positionBlock[blockId];
+                            dm.FStream.Position = positionBlock[blockId];
                             
                             read -= skipRead;
-                            DM.FStream.Write(bufferWritter, skipRead, read);
+                            dm.FStream.Write(bufferWritter, skipRead, read);
 
                         }
                         else
                         {
-                            DM.FStream.Write(bufferWritter, 0, read);
+                            dm.FStream.Write(bufferWritter, 0, read);
 
                         }
                         
@@ -381,8 +381,8 @@ namespace VKDrive
                 }
                 
                 //Console.WriteLine("EndDowndloadBlock: " + blockIdStart + ".." + blockIdEnd + " End: " + blockId);
-                DB.Instance.Execute("UPDATE file_parts SET status = " + STATUS_OK
-                                + " WHERE uid = " + fileUID[0] + " AND fid=" + fileUID[1] + " AND block_id = " + blockId);
+                Db.Instance.Execute("UPDATE file_parts SET status = " + StatusOk
+                                + " WHERE uid = " + fileUid[0] + " AND fid=" + fileUid[1] + " AND block_id = " + blockId);
 
                 stream.Close();
                 result.Close();
@@ -391,7 +391,7 @@ namespace VKDrive
             catch (Exception e)
             {
                 
-                finfo.update();
+                finfo.Update();
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine(finfo.Url + " " + e.Message);
                 Console.ResetColor();
@@ -399,8 +399,8 @@ namespace VKDrive
                 // Все пропало, отменяем загрзку
                 do
                 {
-                    DB.Instance.Execute("UPDATE file_parts SET status = " + STATUS_ERROR
-                                + " WHERE uid = " + fileUID[0] + " AND fid=" + fileUID[1]
+                    Db.Instance.Execute("UPDATE file_parts SET status = " + StatusError
+                                + " WHERE uid = " + fileUid[0] + " AND fid=" + fileUid[1]
                                 + " AND block_id >= " + blockId + " AND block_id <= " + blockIdEnd);
                     blockId++;
                     

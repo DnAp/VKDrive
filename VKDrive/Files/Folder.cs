@@ -14,23 +14,23 @@ namespace VKDrive.Files
     public class Folder : VFile
     {
         public BlockingList<VFile> Childs;
-        ILoader _Loader = null;
+        ILoader _loader = null;
         public ILoader Loader
         {
             get
             {
-                return _Loader;
+                return _loader;
             }
         }
 
-        private bool _IsLoader = false;
+        private bool _isLoader = false;
         public bool IsLoaded
         {
             set
             {
-                if (_IsLoader == false && value == true)
+                if (_isLoader == false && value == true)
                 {
-                    _IsLoader = value;
+                    _isLoader = value;
                     if (Childs.Count > 0)
                     {
                         VFile loaderFile = Childs.First();
@@ -44,7 +44,7 @@ namespace VKDrive.Files
             }
             get
             {
-                return _IsLoader;
+                return _isLoader;
             }
         }
         
@@ -55,16 +55,16 @@ namespace VKDrive.Files
         public Dictionary<string, string> Property = new Dictionary<string,string>();
         public Folder(string name) : base(name)
         {
-            init();
+            Init();
         }
 
         public Folder(string name, ILoader loader) : base(name)
         {
-            _Loader = loader;
-            init();
+            _loader = loader;
+            Init();
         }
 
-        private void init()
+        private void Init()
         {
             Attributes = System.IO.FileAttributes.Directory;
             Childs = new BlockingList<VFile>() { new PlainText("Идет загрузка.txt") };
@@ -75,7 +75,7 @@ namespace VKDrive.Files
             return base.ToString() + " " + Property.Select(s => s.ToString());
         }
 
-        public VFile findInChilds(string name)
+        public VFile FindInChilds(string name)
         {
             foreach(VFile curFile in Childs) {
                 if (curFile.FileName == name)
@@ -87,7 +87,7 @@ namespace VKDrive.Files
         public void ChildsAdd(VFile file)
         {
             string name = file.FileName;
-            VFile cp = this.findInChilds(name);
+            VFile cp = this.FindInChilds(name);
             
             if (cp != null)
             {
@@ -107,7 +107,7 @@ namespace VKDrive.Files
                         name = file.FileName + "(" + i.ToString() + ")";
                     }
 
-                    cp = this.findInChilds(name);
+                    cp = this.FindInChilds(name);
                 }
                 file.FileName = name;
             }
@@ -138,7 +138,7 @@ namespace VKDrive.Files
                     int residue = copy.Count - (i * maxFile); // остаток
                     residue = residue < maxFile ? residue : maxFile;
                     IList<VFile> tmp = copy.GetRange(i * maxFile, residue);
-                    String folderName = VFile.clearName(tmp[0].FileName).Substring(0, 1) + ".." + VFile.clearName(tmp[residue - 1].FileName).Substring(0, 1);
+                    String folderName = VFile.ClearName(tmp[0].FileName).Substring(0, 1) + ".." + VFile.ClearName(tmp[residue - 1].FileName).Substring(0, 1);
                     fNode = new Folder(folderName);
 
                     foreach (VFile curFile in tmp)

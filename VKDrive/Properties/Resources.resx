@@ -114,4 +114,22 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="Browser_Browser_Load_BusyAllDrivers" xml:space="preserve">
+    <value>Кончились места для жестких дисков. Отключите что-то и перезапустите VKDrive.</value>
+  </data>
+  <data name="Browser_webBrowser1_DocumentCompleted_Banned" xml:space="preserve">
+    <value>ВКонтакте рассказал мне страшную историю: общий смысл сводится к тому что тебе нужно зайти на https://vk.com/</value>
+  </data>
+  <data name="Message_Error" xml:space="preserve">
+    <value>Ошибка</value>
+  </data>
+  <data name="AccessDenied" xml:space="preserve">
+    <value>Доступ запрещeн</value>
+  </data>
+  <data name="UnknownError" xml:space="preserve">
+    <value>Неизвестная ошибка</value>
+  </data>
+  <data name="ErrorN" xml:space="preserve">
+    <value>Ошибка {0}</value>
+  </data>
 </root>

@@ -1,8 +1,12 @@
-﻿using Newtonsoft.Json;
+﻿using System;
+using Newtonsoft.Json;
+using VKDrive.Files;
+using VKDrive.Properties;
+using VKDrive.Utils;
 
 namespace VKDrive.VKAPI
 {
-    public class SerializationObject
+    public static class SerializationObject
     {
         [JsonObject(MemberSerialization.OptIn)]
         public struct Album
@@ -20,8 +24,6 @@ namespace VKDrive.VKAPI
             public int Updated { get; set; }
             [JsonProperty("size")]
             public int Size { get; set; }
-
-
         }
 
         [JsonObject(MemberSerialization.OptIn)]
@@ -123,7 +125,6 @@ namespace VKDrive.VKAPI
                     return Photo130;
                 return Photo75;
             }
-
         }
 
         [JsonObject(MemberSerialization.OptIn)]
@@ -143,10 +144,31 @@ namespace VKDrive.VKAPI
             public byte Sex { get; set; }
             [JsonProperty("bdate")]
             public string BirthDate { get; set; }
-            
-
-
         }
 
+	    public static PlainText ExceptionToFile(Exception exception)
+	    {
+		    return ExceptionToFile(exception, Resources.AccessDenied);
+	    }
+
+        public static PlainText ExceptionToFile(Exception exception, string accessDeniedMessage)
+	    {
+			PlainText readme;
+			if (exception.Data.Contains("code"))
+			{
+				if (exception.Data["code"].ToString() == "15") // Access denied:
+				{
+					readme = new PlainText(accessDeniedMessage + ".txt");
+					readme.SetText(PlainText.GetSubscript());
+					return readme;
+				}
+				readme = new PlainText(Resources.ErrorN.F(exception.Data["code"] + ".txt"));
+				readme.SetText(PlainText.GetSubscript());
+				return readme;
+			}
+			readme = new PlainText(Resources.UnknownError + ".txt");
+			readme.SetText(exception + PlainText.GetSubscript());
+			return readme;
+		}
     }
 }

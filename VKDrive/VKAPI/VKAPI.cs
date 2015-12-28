@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 namespace VKDrive.VKAPI
 {
     [JsonObject(MemberSerialization.OptIn)]
-    struct VKResponceError
+    struct VkResponceError
     {
         [JsonProperty("error_code")]
         public string ErrorCode { get; set; }
@@ -21,42 +21,41 @@ namespace VKDrive.VKAPI
     }
 
 
-    class VKAPI : IDisposable
+    class Vkapi : IDisposable
     {
-        const int TIMEOUT = 1000 / 3;
-        ConcurrentQueue<APIQuery> concurrentQueue = new ConcurrentQueue<APIQuery>();
-        bool isAlive = true;
-        private static VKAPI instance;
+        const int Timeout = 1000 / 3;
+        ConcurrentQueue<ApiQuery> _concurrentQueue = new ConcurrentQueue<ApiQuery>();
+        bool _isAlive = true;
+        private static Vkapi _instance;
 
-        private AutoResetEvent resetEvent = new AutoResetEvent(false);
+        private AutoResetEvent _resetEvent = new AutoResetEvent(false);
         
-        private static ILog Log = LogManager.GetLogger("VKAPI");
+        private static readonly ILog Log = LogManager.GetLogger("VKAPI");
 
-        private VKAPI()
+        private Vkapi()
         {
-            Thread workerThread = new Thread(this.DoWork);
-            workerThread.Start();
+            new Thread(this.DoWork).Start();
         }
 
-        public static VKAPI Instance
+        public static Vkapi Instance
         {
             get
             {
-                if (instance == null)
+                if (_instance == null)
                 {
-                    instance = new VKAPI();
+                    _instance = new Vkapi();
                 }
-                return instance;
+                return _instance;
             }
         }
 
-        public JToken StartTaskSync(APIQuery query)
+        public JToken StartTaskSync(ApiQuery query)
         {
-            concurrentQueue.Enqueue(query);
+            _concurrentQueue.Enqueue(query);
             byte i = 0;
             do
             {
-                resetEvent.WaitOne();
+                _resetEvent.WaitOne();
                 if(i==3)
                 {
                     Log.Error("VK API EXECUTE ERROR: long wait");
@@ -77,9 +76,9 @@ namespace VKDrive.VKAPI
         {
             if (errorJs != null)
             {
-                VKResponceError error = errorJs.ToObject<VKResponceError>();
+                var error = errorJs.ToObject<VkResponceError>();
                 Log.Error("VK API EXECUTE ERROR: " + error.ErrorCode + ":" + error.ErrorMsg);
-                Exception e = new Exception("VK API EXECUTE ERROR: " + error.ErrorCode + ":" + error.ErrorMsg);
+                var e = new Exception("VK API EXECUTE ERROR: " + error.ErrorCode + ":" + error.ErrorMsg);
                 e.Data.Add("code", error.ErrorCode);
                 e.Data.Add("msg", error.ErrorMsg);
                 throw e;
@@ -88,48 +87,47 @@ namespace VKDrive.VKAPI
 
         public void DoWork()
         {
-            while (isAlive)
+            while (_isAlive)
             {
-                Thread.Sleep(TIMEOUT);
-                APIQuery query;
-                List<APIQuery> qList = new List<APIQuery>();
-                String executeQuery = "return [";
-                while (concurrentQueue.TryDequeue(out query))
+                Thread.Sleep(Timeout);
+                ApiQuery query;
+                var qList = new List<ApiQuery>();
+                var executeQuery = "return [";
+                while (_concurrentQueue.TryDequeue(out query))
                 {
                     qList.Add(query);
-                    executeQuery += query.ToString() + ",";
+                    executeQuery += query + ",";
                 }
                 if(qList.Count == 0)
                 {
-                    resetEvent.Set();
+                    _resetEvent.Set();
                     continue;
                 }
                 executeQuery += "0];";
-                Dictionary<string, string> param = new Dictionary<string, string>();
-                param.Add("code", executeQuery);
-                var executeAPIQuery = new APIQuery("execute", param, VKAPILibrary.JSON);
+	            var param = new Dictionary<string, string> {{"code", executeQuery}};
+	            var executeApiQuery = new ApiQuery("execute", param, VkapiLibrary.Json);
 
-                string jsonSrc = VKAPILibrary.Instance.execute(executeAPIQuery);
+                var jsonSrc = VkapiLibrary.Instance.Execute(executeApiQuery);
                 //Console.WriteLine(jsonSrc);
-                JObject jObject = JObject.Parse(jsonSrc);
+                var jObject = JObject.Parse(jsonSrc);
                 
                 TryThrowException(jObject.GetValue("error"));
 
-                JToken result = jObject.GetValue("response");
+                var result = jObject.GetValue("response");
                 if (result.GetType() != typeof(JArray) || ((JArray)result).Count < qList.Count)
                 {
-                    Log.Error("VK API EXECUTE ERROR: unknown responce :" + jObject.ToString());
-                    throw new Exception("VK API EXECUTE ERROR: unknown responce :"+ jObject.ToString());
+                    Log.Error("VK API EXECUTE ERROR: unknown responce :" + jObject);
+                    throw new Exception("VK API EXECUTE ERROR: unknown responce :"+ jObject);
                 }
-                int i = 0;
-                int errorI = 0;
-                foreach (JToken res in (JArray)result)
+                var i = 0;
+                var errorI = 0;
+                foreach (var res in (JArray)result)
                 {
                     if (i < qList.Count)
                     {
                         if (res.Type == JTokenType.Boolean && !(bool)res)
                         {
-                            JArray executeErrors = (JArray)jObject.GetValue("execute_errors");
+                            var executeErrors = (JArray)jObject.GetValue("execute_errors");
                             qList[i].Responce = executeErrors[errorI];
                             errorI++;
                         }
@@ -141,18 +139,18 @@ namespace VKDrive.VKAPI
                     }
                 }
 
-                resetEvent.Set();
+                _resetEvent.Set();
             }
         }
 
         public void Stop()
         {
-            isAlive = false;
+            _isAlive = false;
         }
 
         public void Dispose()
         {
-            resetEvent.Dispose();
+            _resetEvent.Dispose();
         }
     }
 }

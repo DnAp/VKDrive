@@ -11,60 +11,41 @@ namespace VKDrive.Loader.VKontakte.Photos
 {
     public class GetAlbums : ILoader
     {
-        private int OwnerId;
+        private readonly int _ownerId;
 
-        public GetAlbums(int OwnerId)
+        public GetAlbums(int ownerId)
         {
-            this.OwnerId = OwnerId;
+            this._ownerId = ownerId;
         }
 
         public VFile[] Load()
         {
-            JObject apiResult;
-            try { 
-                apiResult = (JObject)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery(
-                    "photos.getAlbums", 
-                    new Dictionary<string, string>() {
-                        { "owner_id", OwnerId.ToString() }
-                }));
-            }
-            catch (Exception e)
-            {
-                PlainText readme;
-                if (e.Data.Contains("code") && e.Data["code"].ToString() == "15")
-                {
-                    // 15:Access denied: group photos are disabled
+	        try { 
+                var apiResult = (JObject)Vkapi.Instance.StartTaskSync(new ApiQuery(
+	                "photos.getAlbums", 
+	                new Dictionary<string, string>() {
+		                { "owner_id", _ownerId.ToString() }
+	                }));
 
-                    readme = new PlainText("Фотографии отключены.txt");
-                    readme.SetText(PlainText.getSubscript());
-                    return new VFile[] { readme };
-                }
-                if (e.Data.Contains("code"))
-                {
-                    readme = new PlainText("Ошибка " + e.Data["code"].ToString() + ".txt");
-                    readme.SetText(PlainText.getSubscript());
-                    return new VFile[] { readme };
-                }
-                readme = new PlainText("Неизвестная ошибка.txt");
-                readme.SetText(e.ToString()+PlainText.getSubscript());
-                return new VFile[] { readme };
-            }
-            JArray items = (JArray)apiResult.GetValue("items");
-            Folder curFolder;
-            VFile[] result = new VFile[items.Count];
-            int i = 0;
-            foreach (JObject item in items)
-            {
-                SerializationObject.Album album = item.ToObject<SerializationObject.Album>();
+				var items = (JArray)apiResult.GetValue("items");
+				
+				var result = new List<VFile>();
+				foreach (var jToken in items)
+				{
+					var album = jToken.ToObject<SerializationObject.Album>();
 
-                curFolder = new Folder(album.Title, new Photos.Get(OwnerId, album.Id));
-                DateTime unixTimeStamp = new DateTime(1970, 1, 1, 0, 0, 0, 0);
-                curFolder.CreationTime = unixTimeStamp.AddSeconds(album.Created);
-                curFolder.LastWriteTime = unixTimeStamp.AddSeconds(album.Updated);
-                result[i] = curFolder;
-                i++;
+					var curFolder = new Folder(album.Title, new Get(_ownerId, album.Id));
+					var unixTimeStamp = new DateTime(1970, 1, 1, 0, 0, 0, 0);
+					curFolder.CreationTime = unixTimeStamp.AddSeconds(album.Created);
+					curFolder.LastWriteTime = unixTimeStamp.AddSeconds(album.Updated);
+					result.Add(curFolder);
+				}
+				return result.ToArray();
+			}
+            catch (Exception exception)
+            {
+	            return new VFile[] { SerializationObject.ExceptionToFile(exception) };
             }
-            return result;
         }
     }
 }

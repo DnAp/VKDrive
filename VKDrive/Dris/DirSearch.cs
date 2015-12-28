@@ -1,11 +1,6 @@
 ﻿using Dokan;
 using Newtonsoft.Json.Linq;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 using VKDrive.Files;
 using VKDrive.VKAPI;
 
@@ -13,20 +8,20 @@ namespace VKDrive.Dris
 {
     class DirSearch : Dir
     {
-        const string STORAGE_KEY = "DirSearch";
+	    private const string StorageKey = "DirSearch";
 
-        public override void _LoadRootNode()
+	    public override void _LoadRootNode()
         {
             RootNode = new Folder("");
             RootNode.Property.Add("type", "storage.get:searchDir");
             RootNode.IsLoaded = false;
         }
 
-        public override bool _LoadFile(Files.Folder file)
+        public override bool _LoadFile(Folder file)
         {
-            file.ChildsAdd(new Files.Settings("Добавить поисковый запрос.lnk"));
+            file.ChildsAdd(new Settings("Добавить поисковый запрос.lnk"));
             file.ChildsAdd(
-                new Files.SettingsXls(
+                new SettingsXls(
                     "VKDirvePathData.xml", "Добавить поисковый запрос",
                     "Введите ключевые слова для поиска",
                     "Странная ошибка. Программист не смог придумать в каком случае она возникнет.",
@@ -35,35 +30,15 @@ namespace VKDrive.Dris
 
             if (file.Property["type"] == "storage.get:searchDir")
             {
-                string stringDir = API.VKStorage.get(STORAGE_KEY);
+                var stringDir = API.VkStorage.Get(StorageKey);
 
-                if (stringDir.Length > 0)
-                {
-                    string[] dirs = stringDir.Split('\n');
-                    Folder folder;
-                    for (int i = 0; i < dirs.Length; i++)
-                    {
-                        folder = new Folder(dirs[i]);
-                        folder.Property.Add("type", "search");
-                        RootNode.ChildsAdd(folder);
-                    }
-                }
-            }
-            else if (file.Property["type"] == "search")
-            {
-                JObject apiResult = (JObject)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery(
-                    "audio.search", 
-                    new Dictionary<string, string>(){
-				        {"q", file.FileName},
-                        {"count", "200"}
-			        }
-                ));
+	            if (stringDir.Length <= 0) return true;
 
-                JArray items = (JArray)apiResult.GetValue("items");
-                foreach (JObject item in items)
-                {
-                    file.ChildsAdd(new Mp3(item.ToObject< SerializationObject.Audio>()));
-                }
+	            var dirs = stringDir.Split('\n');
+	            foreach (var folderName in dirs)
+	            {
+		            RootNode.ChildsAdd(new Folder(folderName, new Loader.VKontakte.Audio.Search(folderName)));
+	            }
             }
             else
             {
@@ -79,29 +54,29 @@ namespace VKDrive.Dris
             folder.Property.Add("type", "search");
             RootNode.ChildsAdd(folder);
 
-            saveDirectoriesList();
+            SaveDirectoriesList();
             return DokanNet.DOKAN_SUCCESS;
         }
 
-        private void saveDirectoriesList()
+        private void SaveDirectoriesList()
         {
             string files = "";
-            foreach( VFile file in RootNode.Childs ) {
+            foreach( var file in RootNode.Childs ) {
                 if(file.GetType() == typeof(Folder)){
                     files += file.FileName+"\n";
                 }
             }
-            API.VKStorage.set(STORAGE_KEY, files.Trim());
+            API.VkStorage.Set(StorageKey, files.Trim());
         }
 
         public override int DeleteDirectory(string filename, DokanFileInfo info)
         {
-            VFile node = FindFiles(filename);
+            var node = FindFiles(filename);
 
             if (node == null)
                 return -1;
             RootNode.Childs.Remove(node);
-            saveDirectoriesList();
+            SaveDirectoriesList();
             return DokanNet.DOKAN_SUCCESS;
         }
 

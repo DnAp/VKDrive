@@ -1,9 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using VKDrive.Files;
 using VKDrive.VKAPI;
 
@@ -11,30 +7,30 @@ namespace VKDrive.Loader.VKontakte.Photos
 {
     public class Get : ILoader
     {
-        int AlbumId;
-        int OwnerId;
+	    private readonly int _albumId;
+	    private readonly int _ownerId;
         public Get(int ownerId, int albumId)
         {
-            OwnerId = ownerId;
-            AlbumId = albumId;
+            _ownerId = ownerId;
+            _albumId = albumId;
         }
 
         public VFile[] Load()
         {
-            JObject apiResult = (JObject)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery(
+            var apiResult = (JObject)Vkapi.Instance.StartTaskSync(new ApiQuery(
                 "photos.get", 
-                new Dictionary<string, string>() {
-                    { "owner_id", OwnerId.ToString() },
-                    { "album_id", AlbumId.ToString() }
+                new Dictionary<string, string> {
+                    { "owner_id", _ownerId.ToString() },
+                    { "album_id", _albumId.ToString() }
                 }));
 
-            Photo photo;
-            JArray items = (JArray)apiResult.GetValue("items");
-            VFile[] result = new VFile[items.Count];
-            int i = 0;
-            foreach (JObject item in items)
+	        var items = (JArray)apiResult.GetValue("items");
+            var result = new VFile[items.Count];
+            var i = 0;
+            foreach (var jToken in items)
             {
-                photo = new Photo(item.ToObject<SerializationObject.Photo>());
+	            var item = (JObject) jToken;
+	            var photo = new Photo(item.ToObject<SerializationObject.Photo>());
                 result[i] = photo;
                 i++;
             }

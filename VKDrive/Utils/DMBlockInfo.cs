@@ -1,7 +1,7 @@
 ﻿using System;
 namespace VKDrive.Utils
 {
-    class DMBlockInfo
+    class DmBlockInfo
     {
         public bool IsComplite = false;
         public bool IsError = false;
@@ -10,7 +10,7 @@ namespace VKDrive.Utils
         public int Downloaded = 0;
         public int FileId;
 
-        public DMBlockInfo(int fileId)
+        public DmBlockInfo(int fileId)
         {
             FileId = fileId;
         }

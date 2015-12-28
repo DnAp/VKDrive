@@ -6,10 +6,10 @@ using System.Xml.Linq;
 
 namespace VKDrive.API
 {
-    class VKStorage
+    class VkStorage
     {
-        public static string get(string key){
-            return VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("storage.get", new Dictionary<string, string>() { { "key", key } })).ToObject<string>();
+        public static string Get(string key){
+            return VKAPI.Vkapi.Instance.StartTaskSync(new VKAPI.ApiQuery("storage.get", new Dictionary<string, string>() { { "key", key } })).ToObject<string>();
         }
         /// <summary>
         /// Помни %username% максимальнся длинна 4096 байт
@@ -17,13 +17,13 @@ namespace VKDrive.API
         /// </summary>
         /// <param name="key"></param>
         /// <param name="value"></param>
-        public static void set(string key, string value)
+        public static void Set(string key, string value)
         {
-            VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("storage.set", new Dictionary<string, string>() { { "key", key }, {"value", value} }));
+            VKAPI.Vkapi.Instance.StartTaskSync(new VKAPI.ApiQuery("storage.set", new Dictionary<string, string>() { { "key", key }, {"value", value} }));
         }
 
-        public static void remove(string key, string value){
-            string fullValue = get(key);
+        public static void Remove(string key, string value){
+            string fullValue = Get(key);
             if (fullValue.Length == 0)
                 return;
             
@@ -32,16 +32,16 @@ namespace VKDrive.API
             if (i > -1)
             {
                 list.RemoveAt(i);
-                set(key, string.Join("\n", list));
+                Set(key, string.Join("\n", list));
             }
         }
 
-        public static void join(string key, string value)
+        public static void Join(string key, string value)
         {
-            string fullValue = get(key);
+            string fullValue = Get(key);
             if (fullValue.Length == 0)
             {
-                set(key, value);
+                Set(key, value);
                 return;
             }
             string[] list = fullValue.Split('\n');
@@ -51,7 +51,7 @@ namespace VKDrive.API
                 if (list[i] == value)
                     return;
             }
-            set(key, fullValue + "\n" + value);
+            Set(key, fullValue + "\n" + value);
         }
 
     }

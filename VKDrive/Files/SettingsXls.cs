@@ -6,7 +6,7 @@ namespace VKDrive.Files
 {
     class SettingsXls : VFile
     {
-        private byte[] text;
+        private byte[] _text;
 
         public SettingsXls(string fileName, string name, string actionName, string errorMessage, string skipMessage)
             : base(fileName)
@@ -18,7 +18,7 @@ namespace VKDrive.Files
             CreationTime = DateTime.Now;
             LastAccessTime = DateTime.Now;
             //Length = (new FileInfo(SettingsLnk)).Length;
-            text = new byte[0];
+            _text = new byte[0];
 
             string xml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>" +
                     "<root><type>1</type><name>" + name + "</name>" +
@@ -26,23 +26,23 @@ namespace VKDrive.Files
                     "<errorMessage>" + errorMessage + "</errorMessage>" +
                     "<skipMessage>" + skipMessage + "</skipMessage></root>";
 
-            text = Encoding.UTF8.GetBytes(xml);
-            Length = text.Length;
+            _text = Encoding.UTF8.GetBytes(xml);
+            Length = _text.Length;
 
         }
 
         public override int ReadFile(byte[] buffer, ref uint readBytes, long offset, Dokan.DokanFileInfo info)
         {
-            if (offset >= text.Length)
+            if (offset >= _text.Length)
             {
                 readBytes = 0;
                 return Dokan.DokanNet.DOKAN_SUCCESS;
             }
 
-            readBytes = Convert.ToUInt32(offset + buffer.Length > text.Length ? text.Length - offset : buffer.Length);
+            readBytes = Convert.ToUInt32(offset + buffer.Length > _text.Length ? _text.Length - offset : buffer.Length);
             // Тут ограничение нужно по длинне
             //text.CopyTo(buffer, offset);
-            Array.Copy(text, offset, buffer, 0, readBytes);
+            Array.Copy(_text, offset, buffer, 0, readBytes);
             return Dokan.DokanNet.DOKAN_SUCCESS;
         }
     }

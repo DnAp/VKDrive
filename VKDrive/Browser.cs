@@ -1,124 +1,156 @@
 ﻿using log4net;
 using Newtonsoft.Json.Linq;
 using System;
+using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Windows.Forms;
-using VKDrive.Files;
+using VKDrive.Properties;
 using VKDrive.VKAPI;
+using static VKDrive.Properties.Settings;
 
 namespace VKDrive
 {
     public partial class Browser : Form
     {
-        int webBrowserLogoutWait = 0;
+        int _webBrowserLogoutWait = 0;
+	    private System.Threading.Mutex _mutex;
 
-
-        public static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+		public static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         public Browser()
         {
             Log.Info("Start vkdrive");
             
-
             bool mutexWasCreated;
-            System.Threading.Mutex mutex = new System.Threading.Mutex(true, "VKDrive", out mutexWasCreated);
+			_mutex = new System.Threading.Mutex(true, "VKDrive", out mutexWasCreated);
             if (!mutexWasCreated)
             {
                 Log.Warn("Double start! Exit.");
                 Environment.Exit(0);
-                return;
             }
 
             InitializeComponent();
 
             // Важная процедура проверки установленности dokan
-            if (!DokanInit.test())
+            if (!DokanInit.Test())
             {
                 Log.Warn("Dokan not installed");
-                if (DokanInit.installLib() == 0)
+                if (DokanInit.InstallLib() == 0)
                 {
                     Log.Warn("Dokan fail install?");
                     notifyIcon1.Visible = false;
-                    System.Environment.Exit(0);
-                    return;
+                    Environment.Exit(0);
                 }
             }
             
-
             // эта штка говорит что мы не показываем форму при запуске
             this.Visible = false;
             this.IsVisibilityChangeAllowed = false;
-            DokanInit.end();
-            
-            toAuthVKPage();
+            DokanInit.End();
+			
+			ChangeDriverName();
+
+			ToAuthVkPage();
         }
-        private void Browser_Load(object sender, EventArgs e)
+
+		/// Проверка и поиск диска
+		private void ChangeDriverName()
+	    {
+			var busyDrives = new HashSet<String>();
+			foreach (DriveInfo drive in DriveInfo.GetDrives())
+			{
+				busyDrives.Add(drive.Name.Substring(0, drive.Name.IndexOf(":", StringComparison.Ordinal)));
+			}
+
+			if (!busyDrives.Contains(Default.MountPoint))
+				return;
+
+			var curDisk = 'V';
+			while (curDisk <= 'Z')
+			{
+				if (!busyDrives.Contains(curDisk.ToString()))
+				{
+					Default.MountPoint = curDisk.ToString();
+					Default.Save();
+					return;
+				}
+				curDisk++;
+			}
+			curDisk = 'A';
+            while (curDisk < 'V')
+			{
+				if (!busyDrives.Contains(curDisk.ToString()))
+				{
+					Default.MountPoint = curDisk.ToString();
+					Default.Save();
+                    return;
+				}
+				curDisk++;
+			}
+        	MessageBox.Show(Resources.Browser_Browser_Load_BusyAllDrivers);
+			Environment.Exit(0);
+
+
+			// Есть беда, докан не умеет диски из 2 букв, код дальше выбирает именно его
+			/*
+			var curDisk = 'V';
+			var prefix = "";
+			while (true)
+			{
+				while(curDisk <= 'Z')
+				{
+					if (!busyDrives.Contains(prefix+curDisk))
+					{
+						Default.MountPoint = prefix+curDisk;
+						return;
+					}
+					curDisk++;
+				}
+				if (prefix == "")
+				{
+					prefix = "A";
+				}
+				else
+				{
+					var lastLetter = prefix[prefix.Length - 1];
+					if (lastLetter == 'Z')
+					{
+						prefix += "A";
+					}
+					else
+					{
+						lastLetter++;
+						prefix = prefix.Substring(0, prefix.Length - 1) + lastLetter;
+					}
+				}
+				curDisk = 'A';
+			}*/
+		}
+
+		private void Browser_Load(object sender, EventArgs e)
         {
             this.Hide();
-            // todo найти диск даже если он занят. Но не ошметком вкдрайв
-            if (Properties.Settings.Default.FirstStart)
-            {
-                /// Первый старт, поиск подходящего диска
-                DriveInfo[] allDrives = DriveInfo.GetDrives();
-                string busyDrives = "";
-                foreach (DriveInfo drive in allDrives)
-                {
-                    busyDrives += drive.Name[0];
-                }
-                char disk;
-                disk = '*';
-                for (char curDisk = 'V'; curDisk <= 'Z'; curDisk++)
-                {
-                    if (busyDrives.IndexOf(curDisk) == -1)
-                    {
-                        disk = curDisk;
-                        break;
-                    }
-                }
-                if (disk == '*')
-                {
-                    for (char curDisk = 'A'; curDisk <= 'V'; curDisk++)
-                    {
-                        if (busyDrives.IndexOf(curDisk) == -1)
-                        {
-                            MessageBox.Show("Ничего страшного если VKDrive запустится на диске " + curDisk + "?");
-                            disk = curDisk;
-                            break;
-                        }
-                    }
-                }
-                if (disk == '*')
-                {
-                    MessageBox.Show("Зачем тебе столько дисков? Мне правда интересно. Ах да, запуститься VKDrive не сможет:'(");
-                    System.Environment.Exit(0);
-                    return;
-                }
+			
+            Default.FirstStart = false;
+            Default.Save();
+            SetVisibleCore(true);
 
-                Properties.Settings.Default.MountPoint = disk;
-                Properties.Settings.Default.FirstStart = false;
-                Properties.Settings.Default.Save();
-                SetVisibleCore(true);
-
-                Timer timer = new Timer();
-                timer.Tick += timer_Tick;
-                timer.Interval = 500;
-                timer.Start();
-            }
+			/*
+			var timer = new Timer();
+            timer.Tick += timer_Tick;
+            timer.Interval = 500;
+            timer.Start();
+			*/
         }
-
+		/*
         private void timer_Tick(object sender, EventArgs e)
         {
             DriveInfo[] allDrives = DriveInfo.GetDrives();
             foreach (DriveInfo drive in allDrives)
             {
-                if (drive.Name[0] == Properties.Settings.Default.MountPoint)
+                if (drive.Name[0] == Default.MountPoint)
                 {
                     ((Timer)sender).Stop();
                     try
@@ -128,7 +160,7 @@ namespace VKDrive
                     } catch(Exception){}
                 }
             }
-        }
+        }*/
 
         bool IsVisibilityChangeAllowed { get; set; }
 
@@ -142,98 +174,114 @@ namespace VKDrive
 
         private void notifyIcon1_DoubleClick(object sender, EventArgs e)
         {
-            this.IsVisibilityChangeAllowed = true;
-            this.Show();
+            if (DokanInit.IsWorking())
+            {
+                System.Diagnostics.Process.Start("explorer", Default.MountPoint + @":\\");
+            }
+            else
+            {
+                this.IsVisibilityChangeAllowed = true;
+                this.Show();
+                this.Focus();
+            }
+            
         }
+        
+
 
         private void webBrowser1_DocumentCompleted(object sender, WebBrowserDocumentCompletedEventArgs e)
         {
-            try {
-                this.IsVisibilityChangeAllowed = true;
+	        try
+	        {
+		        this.IsVisibilityChangeAllowed = true;
 
-                Log.Debug("Document load completed: " + webBrowser1.Url.AbsoluteUri);
-                if (webBrowserLogoutWait == 1)
-                {
-                    HtmlElement logout = webBrowser1.Document.GetElementById("logout_link");
-                    if (logout != null)
-                    {
-                        Log.Debug("Document load completed have logout lonk: " + logout.GetAttribute("href"));
-                        webBrowser1.Url = new Uri(logout.GetAttribute("href"));
-                        webBrowserLogoutWait = 2;
-                    }
-                }
-                else if (webBrowserLogoutWait == 2 && webBrowser1.Url.AbsoluteUri.IndexOf("login") > -1)
-                {
-                    webBrowserLogoutWait = 0;
-                    toAuthVKPage();
-                    this.Show();
-                }
-                else
-                {
-                    /// Первый запуск не авторизовывает приложение
-                    /// https://oauth.vk.com/authorize?client_id=1234&display=popup&response_type=token&scope=audio,friends&redirect_uri=http%3A%2F%2Foauth.vk.com%2Fblank.html
-                    /// и ожидаем ввода логина
-                    /// Когда вход осуществлен переадресация происходит заголовками и мы сразу получаем
-                    /// https://oauth.vk.com/blank.html
-                    /// Прикинь, если аккаунт в вк заблокировали то показывается
-                    /// https://oauth.vk.com/login?act=blocked
-                    ///
+		        Log.Debug("Document load completed: " + webBrowser1.Url.AbsoluteUri);
+		        if (_webBrowserLogoutWait == 1)
+		        {
+			        HtmlElement logout = webBrowser1.Document?.GetElementById("logout_link");
+			        if (logout != null)
+			        {
+				        Log.Debug("Document load completed have logout lonk: " + logout.GetAttribute("href"));
+				        webBrowser1.Url = new Uri(logout.GetAttribute("href"));
+				        _webBrowserLogoutWait = 2;
+			        }
+		        }
+		        else if (_webBrowserLogoutWait == 2 && webBrowser1.Url.AbsoluteUri.IndexOf("login", StringComparison.Ordinal) > -1)
+		        {
+			        _webBrowserLogoutWait = 0;
+			        ToAuthVkPage();
+			        this.Show();
+		        }
+		        else
+		        {
+			        // Первый запуск не авторизовывает приложение
+			        // https://oauth.vk.com/authorize?client_id=1234&display=popup&response_type=token&scope=audio,friends&redirect_uri=http%3A%2F%2Foauth.vk.com%2Fblank.html
+			        // и ожидаем ввода логина
+			        // Когда вход осуществлен переадресация происходит заголовками и мы сразу получаем
+			        // https://oauth.vk.com/blank.html
+			        // Прикинь, если аккаунт в вк заблокировали то показывается
+			        // https://oauth.vk.com/login?act=blocked
 
-                    string locationURL = webBrowser1.Url.AbsoluteUri;
-                    string successURL = "https://oauth.vk.com/blank.html";
-                    string blockedURL = "https://oauth.vk.com/login?act=blocked";
+			        string locationUrl = webBrowser1.Url.AbsoluteUri;
+			        string successUrl = "https://oauth.vk.com/blank.html";
+			        string blockedUrl = "https://oauth.vk.com/login?act=blocked";
 
-                    if (locationURL.Length >= blockedURL.Length && locationURL.Substring(0, blockedURL.Length) == blockedURL)
-                    {
-                        MessageBox.Show("ВКонтакте рассказал мне страшную историю: общий смысл сводится к тому что тебе нужно зайти на https://vk.com/", "Ошибка", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        this.Close();
-                        return;
-                    }
+			        if (locationUrl.Length >= blockedUrl.Length && locationUrl.Substring(0, blockedUrl.Length) == blockedUrl)
+			        {
+				        MessageBox.Show(Resources.Browser_webBrowser1_DocumentCompleted_Banned, Resources.Message_Error,
+					        MessageBoxButtons.OK, MessageBoxIcon.Error);
+				        this.Close();
+				        return;
+			        }
 
-                    if (locationURL.Length < successURL.Length || locationURL.Substring(0, successURL.Length) != successURL)
-                    {
-                        this.Show();
-                        return;
-                    }
-                    // все прошло ок
-                    this.Hide();
+			        if (locationUrl.Length < successUrl.Length || locationUrl.Substring(0, successUrl.Length) != successUrl)
+			        {
+				        this.Show();
+				        return;
+			        }
+			        // все прошло ок
+			        this.Hide();
 
-                    string fullString = (string)locationURL.Split('#').GetValue(1);
-                    string[] paramSrc = fullString.Split('&');
+			        string fullString = (string) locationUrl.Split('#').GetValue(1);
+			        string[] paramSrc = fullString.Split('&');
 
-                    Dictionary<string, string> sessionData = new Dictionary<string, string>();
-                    string[] curP;
-                    for (int i = 0; i < paramSrc.Length; i++)
-                    {
-                        curP = paramSrc[i].Split('=');
-                        sessionData.Add(curP[0], curP[1]);
-                    }
+			        Dictionary<string, string> sessionData = new Dictionary<string, string>();
+			        for (int i = 0; i < paramSrc.Length; i++)
+			        {
+				        var curP = paramSrc[i].Split('=');
+				        sessionData.Add(curP[0], curP[1]);
+			        }
 
-                    VKAPI.VKAPILibrary api = VKAPI.VKAPILibrary.Instance;
-                    api.AppID = Properties.Settings.Default.VKAppId;
-                    api.Expire = Convert.ToInt32(sessionData["expires_in"]);
-                    api.UserID = Convert.ToInt32(sessionData["user_id"]);
-                    api.AccessTokien = (string)sessionData["access_token"];
+			        var api = VkapiLibrary.Instance;
+			        api.AppId = Default.VKAppId;
+			        api.Expire = Convert.ToInt32(sessionData["expires_in"]);
+			        api.UserId = Convert.ToInt32(sessionData["user_id"]);
+			        api.AccessTokien = (string) sessionData["access_token"];
 
-                    JArray apiResult = (JArray)VKAPI.VKAPI.Instance.StartTaskSync(new VKAPI.APIQuery("users.get", new Dictionary<string, string>() { { "uids", sessionData["user_id"] } }));
-                    SerializationObject.User user = apiResult[0].ToObject<SerializationObject.User>();
+			        JArray apiResult =
+				        (JArray)
+					        Vkapi.Instance.StartTaskSync(new ApiQuery("users.get",
+						        new Dictionary<string, string> {{"uids", sessionData["user_id"]}}));
+			        SerializationObject.User user = apiResult[0].ToObject<SerializationObject.User>();
 
-                    notifyIcon1.Text = "VKDrive: " + user.FirstName + " " + user.LastName;
+			        ChangeDriverName();
+			        notifyIcon1.Text = @"VKDrive: " + user.FirstName + @" " + user.LastName;
 
-                    DokanInit.start();
-                }
-            }catch(Exception ex)
-            {
-                Log.Fatal("webBrowser1_DocumentCompleted exception", ex);
-                MessageBox.Show("Фатальная ошибка. "+ex.Message);
-            }
+			        DokanInit.Start();
+		        }
+	        }
+	        catch (Exception ex)
+	        {
+		        Log.Fatal("webBrowser1_DocumentCompleted exception", ex);
+		        MessageBox.Show(ex.Message);
+	        }
         }
 
-        private void toAuthVKPage()
+        private void ToAuthVkPage()
         {
             string scope = "audio,friends,photos"; // ,photos,docs
             //Properties.Settings.Default.VKAppId
-            webBrowser1.Url = new Uri("https://oauth.vk.com/authorize?client_id=" + Properties.Settings.Default.VKAppId +
+            webBrowser1.Url = new Uri("https://oauth.vk.com/authorize?client_id=" + Default.VKAppId +
                 "&display=popup&response_type=token&scope="+scope+"&redirect_uri=http%3A%2F%2Foauth.vk.com%2Fblank.html");
         }
 
@@ -241,7 +289,7 @@ namespace VKDrive
 
         private void toolStripMenuItem1_Click(object sender, EventArgs e)
         {
-            DokanInit.end();
+            DokanInit.End();
             this.Close();
         }
 
@@ -249,7 +297,7 @@ namespace VKDrive
         {
             if (MessageBox.Show("Точно выйти из аккаунта ВКонтакте?", "Внимание", MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
             {
-                webBrowserLogoutWait = 1;
+                _webBrowserLogoutWait = 1;
                 webBrowser1.Url = new Uri("https://vk.com");
                 //DokanInit.end();
             }
@@ -260,20 +308,9 @@ namespace VKDrive
         {
             // Чет не срабатывает 
             //System.Environment.Exit(0);
-            DokanInit.end();
+            DokanInit.End();
         }
-
-        private void notifyIcon1_MouseDoubleClick(object sender, MouseEventArgs e)
-        {
-            if (DokanInit.isWorking())
-            {
-                System.Diagnostics.Process.Start("explorer", Properties.Settings.Default.MountPoint + ":\\");
-            }
-            else
-            {
-                this.Focus();
-            }
-        }
+        
 
     }
 }

@@ -7,35 +7,35 @@ using System.Threading.Tasks;
 
 namespace VKDrive.VKAPI
 {
-    class APIQuery
+    class ApiQuery
     {
         public string Method;
         public Dictionary<string, string> Param;
         public int Type;
         public JToken Responce = null;
         
-        public APIQuery(string method)
+        public ApiQuery(string method)
         {
-            construct(method, new Dictionary<string, string>(), VKAPILibrary.XML);
+            Construct(method, new Dictionary<string, string>(), VkapiLibrary.Xml);
         }
-        public APIQuery(string method, Dictionary<string, string> paramOld)
+        public ApiQuery(string method, Dictionary<string, string> paramOld)
         {
-            construct(method, paramOld, VKAPILibrary.XML);
-        }
-
-        public APIQuery(string method, Dictionary<string, string> paramOld, int type)
-        {
-            construct(method, paramOld, type);
+            Construct(method, paramOld, VkapiLibrary.Xml);
         }
 
-        private void construct(string method, Dictionary<string, string> param, int type)
+        public ApiQuery(string method, Dictionary<string, string> paramOld, int type)
+        {
+            Construct(method, paramOld, type);
+        }
+
+        private void Construct(string method, Dictionary<string, string> param, int type)
         {
             this.Method = method;
             this.Param = param;
             this.Type = type;
         }
 
-        private string jsonEncode(string val)
+        private string JsonEncode(string val)
         {
             // simple json encode \ => \\  " => \"
             return "\"" + val.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\n", "\\n") + "\"";
@@ -47,7 +47,7 @@ namespace VKDrive.VKAPI
             int i = 0;
             foreach (KeyValuePair<string, string> kv in Param)
             {
-                param[i] = jsonEncode(kv.Key)+":"+ jsonEncode(kv.Value);
+                param[i] = JsonEncode(kv.Key)+":"+ JsonEncode(kv.Value);
                 i++;
             }
 

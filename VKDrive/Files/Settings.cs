@@ -13,17 +13,17 @@ namespace VKDrive.Files
     /// </summary>
     class Settings : VFile
     {
-        static string SettingsLnk = null;
+        static string _settingsLnk = null;
         static protected Object SettingsLnkLock = new Object();
-        static ushort SettingsCount = 0;
+        static ushort _settingsCount = 0;
         
         public Settings(string name)
             : base(name)
         {
-            SettingsCount++;
-            if (SettingsLnk == null)
+            _settingsCount++;
+            if (_settingsLnk == null)
             {
-                SettingsLnk = Path.GetTempFileName();
+                _settingsLnk = Path.GetTempFileName();
                 lock (SettingsLnkLock)
                 {
                     using (ShellLink shortcut = new ShellLink())
@@ -31,8 +31,8 @@ namespace VKDrive.Files
                         shortcut.Target = Directory.GetCurrentDirectory() + "\\Resurces\\VKDriveSettings.exe";
                         shortcut.WorkingDirectory = "";
                         shortcut.Description = "Настройки VKDrive";
-                        shortcut.DisplayMode = ShellLink.LinkDisplayMode.edmNormal;
-                        shortcut.Save(SettingsLnk);
+                        shortcut.DisplayMode = ShellLink.LinkDisplayMode.EdmNormal;
+                        shortcut.Save(_settingsLnk);
                     }
                 }
             }
@@ -40,15 +40,15 @@ namespace VKDrive.Files
             LastWriteTime = DateTime.Now;
             CreationTime = DateTime.Now;
             LastAccessTime = DateTime.Now;
-            Length = (new FileInfo(SettingsLnk)).Length;
+            Length = (new FileInfo(_settingsLnk)).Length;
         }
         ~Settings()
         {
-            SettingsCount--;
-            if (SettingsCount == 0)
+            _settingsCount--;
+            if (_settingsCount == 0)
             {
-                File.Delete(SettingsLnk);
-                SettingsLnk = null;
+                File.Delete(_settingsLnk);
+                _settingsLnk = null;
             }
         }
 
@@ -61,7 +61,7 @@ namespace VKDrive.Files
             }
             lock (SettingsLnkLock)
             {
-                FileStream stream = new FileStream(SettingsLnk, FileMode.Open);
+                FileStream stream = new FileStream(_settingsLnk, FileMode.Open);
 
                 readBytes = Convert.ToUInt32(stream.Read(buffer, Convert.ToInt32(offset), buffer.Length));
                 stream.Close();
