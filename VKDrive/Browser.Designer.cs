@@ -1,4 +1,6 @@
-﻿namespace VKDrive
+﻿using System.Windows.Forms;
+
+namespace VKDrive
 {
     partial class Browser
     {
@@ -92,7 +94,8 @@
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.Browser_FormClosed);
             this.Load += new System.EventHandler(this.Browser_Load);
             this.contextMenuStrip1.ResumeLayout(false);
-            this.ResumeLayout(false);
+			WindowState = FormWindowState.Minimized;
+			this.ResumeLayout(false);
 
         }
 

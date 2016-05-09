@@ -1,9 +1,8 @@
-п»їusing log4net;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          using log4net;
 using Newtonsoft.Json.Linq;
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.IO;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          using System.Collections.Generic;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          using System.IO;
 using System.Reflection;
 using System.Windows.Forms;
 using VKDrive.Properties;
@@ -15,25 +14,14 @@ namespace VKDrive
     public partial class Browser : Form
     {
         int _webBrowserLogoutWait = 0;
-	    private System.Threading.Mutex _mutex;
 
 		public static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         public Browser()
         {
-            Log.Info("Start vkdrive");
-            
-            bool mutexWasCreated;
-			_mutex = new System.Threading.Mutex(true, "VKDrive", out mutexWasCreated);
-            if (!mutexWasCreated)
-            {
-                Log.Warn("Double start! Exit.");
-                Environment.Exit(0);
-            }
-
             InitializeComponent();
 
-            // Р’Р°Р¶РЅР°СЏ РїСЂРѕС†РµРґСѓСЂР° РїСЂРѕРІРµСЂРєРё СѓСЃС‚Р°РЅРѕРІР»РµРЅРЅРѕСЃС‚Рё dokan
+            // Важная процедура проверки установленности dokan
             if (!DokanInit.Test())
             {
                 Log.Warn("Dokan not installed");
@@ -45,17 +33,32 @@ namespace VKDrive
                 }
             }
             
-            // СЌС‚Р° С€С‚РєР° РіРѕРІРѕСЂРёС‚ С‡С‚Рѕ РјС‹ РЅРµ РїРѕРєР°Р·С‹РІР°РµРј С„РѕСЂРјСѓ РїСЂРё Р·Р°РїСѓСЃРєРµ
-            this.Visible = false;
-            this.IsVisibilityChangeAllowed = false;
-            DokanInit.End();
+            // эта штка говорит что мы не показываем форму при запуске
+            Visible = true;
+            IsVisibilityChangeAllowed = true;
+	        
+			DokanInit.End();
 			
 			ChangeDriverName();
 
 			ToAuthVkPage();
         }
 
-		/// РџСЂРѕРІРµСЂРєР° Рё РїРѕРёСЃРє РґРёСЃРєР°
+		public const int WM_QUERYENDSESSION = 0x0011;
+		public const int WM_ENDSESSION = 0x0016;
+		public const int WM_SYSCOMMAND = 0x0112;
+
+		protected override void WndProc(ref Message m)
+		{
+			if (m.Msg == WM_QUERYENDSESSION || m.Msg == WM_ENDSESSION || m.Msg == WM_SYSCOMMAND)
+			{
+				DokanInit.End();
+			}
+			base.WndProc(ref m);
+		}
+
+
+		/// Проверка и поиск диска
 		private void ChangeDriverName()
 	    {
 			var busyDrives = new HashSet<String>();
@@ -93,7 +96,7 @@ namespace VKDrive
 			Environment.Exit(0);
 
 
-			// Р•СЃС‚СЊ Р±РµРґР°, РґРѕРєР°РЅ РЅРµ СѓРјРµРµС‚ РґРёСЃРєРё РёР· 2 Р±СѓРєРІ, РєРѕРґ РґР°Р»СЊС€Рµ РІС‹Р±РёСЂР°РµС‚ РёРјРµРЅРЅРѕ РµРіРѕ
+			// Есть беда, докан не умеет диски из 2 букв, код дальше выбирает именно его
 			/*
 			var curDisk = 'V';
 			var prefix = "";
@@ -131,44 +134,20 @@ namespace VKDrive
 
 		private void Browser_Load(object sender, EventArgs e)
         {
-            this.Hide();
-			
-            Default.FirstStart = false;
-            Default.Save();
-            SetVisibleCore(true);
+			Hide();
+			SetVisibleCore(false);
 
-			/*
-			var timer = new Timer();
-            timer.Tick += timer_Tick;
-            timer.Interval = 500;
-            timer.Start();
-			*/
+			Default.FirstStart = false;
+            Default.Save();
         }
-		/*
-        private void timer_Tick(object sender, EventArgs e)
-        {
-            DriveInfo[] allDrives = DriveInfo.GetDrives();
-            foreach (DriveInfo drive in allDrives)
-            {
-                if (drive.Name[0] == Default.MountPoint)
-                {
-                    ((Timer)sender).Stop();
-                    try
-                    {
-                        // РїР»РѕС…Рѕ СЂР°Р±РѕС‚Р°РµС‚
-                        System.Diagnostics.Process.Start(drive.Name[0] + @":\");
-                    } catch(Exception){}
-                }
-            }
-        }*/
 
         bool IsVisibilityChangeAllowed { get; set; }
 
         protected override void SetVisibleCore(bool value)
         {
-            if (this.IsVisibilityChangeAllowed)
+            if (IsVisibilityChangeAllowed)
             {
-                base.SetVisibleCore(value);
+				base.SetVisibleCore(value);
             }
         }  
 
@@ -180,9 +159,10 @@ namespace VKDrive
             }
             else
             {
-                this.IsVisibilityChangeAllowed = true;
-                this.Show();
-                this.Focus();
+                IsVisibilityChangeAllowed = true;
+                Show();
+				WindowState = FormWindowState.Normal;
+				Focus();
             }
             
         }
@@ -193,7 +173,7 @@ namespace VKDrive
         {
 	        try
 	        {
-		        this.IsVisibilityChangeAllowed = true;
+		        IsVisibilityChangeAllowed = true;
 
 		        Log.Debug("Document load completed: " + webBrowser1.Url.AbsoluteUri);
 		        if (_webBrowserLogoutWait == 1)
@@ -210,16 +190,17 @@ namespace VKDrive
 		        {
 			        _webBrowserLogoutWait = 0;
 			        ToAuthVkPage();
-			        this.Show();
-		        }
+			        Show();
+					WindowState = FormWindowState.Normal;
+				}
 		        else
 		        {
-			        // РџРµСЂРІС‹Р№ Р·Р°РїСѓСЃРє РЅРµ Р°РІС‚РѕСЂРёР·РѕРІС‹РІР°РµС‚ РїСЂРёР»РѕР¶РµРЅРёРµ
+			        // Первый запуск не авторизовывает приложение
 			        // https://oauth.vk.com/authorize?client_id=1234&display=popup&response_type=token&scope=audio,friends&redirect_uri=http%3A%2F%2Foauth.vk.com%2Fblank.html
-			        // Рё РѕР¶РёРґР°РµРј РІРІРѕРґР° Р»РѕРіРёРЅР°
-			        // РљРѕРіРґР° РІС…РѕРґ РѕСЃСѓС‰РµСЃС‚РІР»РµРЅ РїРµСЂРµР°РґСЂРµСЃР°С†РёСЏ РїСЂРѕРёСЃС…РѕРґРёС‚ Р·Р°РіРѕР»РѕРІРєР°РјРё Рё РјС‹ СЃСЂР°Р·Сѓ РїРѕР»СѓС‡Р°РµРј
+			        // и ожидаем ввода логина
+			        // Когда вход осуществлен переадресация происходит заголовками и мы сразу получаем
 			        // https://oauth.vk.com/blank.html
-			        // РџСЂРёРєРёРЅСЊ, РµСЃР»Рё Р°РєРєР°СѓРЅС‚ РІ РІРє Р·Р°Р±Р»РѕРєРёСЂРѕРІР°Р»Рё С‚Рѕ РїРѕРєР°Р·С‹РІР°РµС‚СЃСЏ
+			        // Прикинь, если аккаунт в вк заблокировали то показывается
 			        // https://oauth.vk.com/login?act=blocked
 
 			        string locationUrl = webBrowser1.Url.AbsoluteUri;
@@ -230,17 +211,18 @@ namespace VKDrive
 			        {
 				        MessageBox.Show(Resources.Browser_webBrowser1_DocumentCompleted_Banned, Resources.Message_Error,
 					        MessageBoxButtons.OK, MessageBoxIcon.Error);
-				        this.Close();
+				        Close();
 				        return;
 			        }
 
 			        if (locationUrl.Length < successUrl.Length || locationUrl.Substring(0, successUrl.Length) != successUrl)
 			        {
-				        this.Show();
-				        return;
+				        Show();
+						WindowState = FormWindowState.Normal;
+						return;
 			        }
-			        // РІСЃРµ РїСЂРѕС€Р»Рѕ РѕРє
-			        this.Hide();
+			        // все прошло ок
+			        Hide();
 
 			        string fullString = (string) locationUrl.Split('#').GetValue(1);
 			        string[] paramSrc = fullString.Split('&');
@@ -290,12 +272,12 @@ namespace VKDrive
         private void toolStripMenuItem1_Click(object sender, EventArgs e)
         {
             DokanInit.End();
-            this.Close();
+            Close();
         }
 
         private void toolStripMenuItem2_Click(object sender, EventArgs e)
         {
-            if (MessageBox.Show("РўРѕС‡РЅРѕ РІС‹Р№С‚Рё РёР· Р°РєРєР°СѓРЅС‚Р° Р’РљРѕРЅС‚Р°РєС‚Рµ?", "Р’РЅРёРјР°РЅРёРµ", MessageBoxButtons.YesNo) == System.Windows.Forms.DialogResult.Yes)
+            if (MessageBox.Show("Точно выйти из аккаунта ВКонтакте?", "Внимание", MessageBoxButtons.YesNo) == DialogResult.Yes)
             {
                 _webBrowserLogoutWait = 1;
                 webBrowser1.Url = new Uri("https://vk.com");
@@ -306,11 +288,10 @@ namespace VKDrive
 
         private void Browser_FormClosed(object sender, FormClosedEventArgs e)
         {
-            // Р§РµС‚ РЅРµ СЃСЂР°Р±Р°С‚С‹РІР°РµС‚ 
+            // Чет не срабатывает 
             //System.Environment.Exit(0);
             DokanInit.End();
         }
-        
-
-    }
+	}
 }
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      

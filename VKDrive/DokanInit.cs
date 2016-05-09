@@ -13,7 +13,7 @@ namespace VKDrive
     {
         public static Thread DokanThread;
         public static int Status = 1;
-        public static MainFs MainFs;
+        public static MainFs MainFs = null;
 
         private static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
@@ -156,8 +156,9 @@ namespace VKDrive
                 }
             }catch(Exception e)
             {
-                ILog log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+                var log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
                 log.Fatal("StartMainFS fail", e);
+	            Status = DokanNet.DOKAN_ERROR;
             }
             System.Environment.Exit(0);
 

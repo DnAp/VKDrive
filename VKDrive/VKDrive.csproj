@@ -141,6 +141,7 @@
     <Compile Include="Loader\VKontakte\Wall\PaginationSimple.cs" />
     <Compile Include="Utils\BlockingList.cs" />
     <Compile Include="Utils\Exts.cs" />
+    <Compile Include="Utils\RestartManager.cs" />
     <Compile Include="Utils\UnixTimestampJsonConverter.cs" />
     <Compile Include="VKAPI\ApiExpression.cs" />
     <Compile Include="VKAPI\ApiQuery.cs" />

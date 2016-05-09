@@ -16,7 +16,7 @@
 AppId=VKDrive
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
-;AppVerName={#MyAppName} {#MyAppVersion}
+AppVerName={#MyAppName} {#MyAppVersion}
 AppPublisher={#MyAppPublisher}
 AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
@@ -49,7 +49,7 @@ Source: "..\VKDrive\bin\Release\EntityFramework.SqlServer.dll"; DestDir: "{app}"
 Source: "..\VKDrive\bin\Release\log4net.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\VKDrive\bin\Release\Newtonsoft.Json.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\VKDrive\bin\Release\System.Data.SQLite.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\VKDrive\bin\Release\VKDrive.application"; DestDir: "{app}"; Flags: ignoreversion
+;Source: "..\VKDrive\bin\Release\VKDrive.application"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\VKDrive\bin\Release\VKDrive.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\VKDrive\bin\Release\VKDrive.exe.config"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\VKDrive\bin\Release\x86\SQLite.Interop.dll"; DestDir: "{app}\x86"; Flags: ignoreversion
@@ -76,6 +76,15 @@ Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChang
 #include "scripts\products\msiproduct.iss"
 #include "scripts\products\dotnetfx45.iss"
 #include "scripts\products\vcredist2013.iss"
+
+
+function IsUpgrade(): Boolean;
+var
+  sPrevPath: String;
+begin
+  sPrevPath := WizardForm.PrevAppDir;
+  Result := (sPrevPath <> '');
+end;
 
 
 function GetStringVersion(FileName: string) : string;
@@ -110,8 +119,6 @@ var
     InstallLocation: String;
 
 function GetInstallString(): String;
-var
-    InstallString: String;
 begin
     initwinversion();
     dotnetfx45();
@@ -137,7 +144,6 @@ end;
 function InitializeSetup: Boolean;
 var
     V: Integer;
-    sUnInstallString: String;
     Version: String;
 begin
     if RegValueExists(HKEY_LOCAL_MACHINE, ExpandConstant('{#UninstallRegKey}'), 'UninstallString') then begin
@@ -156,6 +162,40 @@ begin
 		GetInstallString();
 	end;
 end;
+
+
+function GetPathInstalled(AppID: String): String;
+	var
+		PrevPath: String;
+	begin
+		PrevPath := '';
+		if not RegQueryStringValue(HKLM, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\'+AppID+'_is1', 'Inno Setup: App Path', PrevPath) then begin
+			RegQueryStringValue(HKCU, 'Software\Microsoft\Windows\CurrentVersion\Uninstall\'+AppID+'_is1', 'Inno Setup: App Path', PrevPath);
+		end;
+		Result := PrevPath;
+	end;
+
+function ShouldSkipPage(PageID: Integer): Boolean;
+  var
+    PrevDir:String;
+	begin
+		PrevDir := GetPathInstalled('VKDrive');
+		if length(Prevdir) > 0 then begin
+			// skip selectdir if It's an upgrade
+			if (PageID = wpSelectDir) then begin
+				Result := true;
+			end else if (PageID = wpSelectProgramGroup) then begin
+				Result := true;
+			end else if (PageID = wpSelectTasks) then begin
+	 		    Result := true;
+			end else if (PageID = wpLicense) then begin
+	 		    Result := true;
+			end else begin
+				Result := false;
+			end;
+		end;
+	end;
+
 
 
 
