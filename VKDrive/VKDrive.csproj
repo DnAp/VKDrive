@@ -66,7 +66,7 @@
     <ManifestKeyFile>VKDrive_TemporaryKey.pfx</ManifestKeyFile>
   </PropertyGroup>
   <PropertyGroup>
-    <GenerateManifests>true</GenerateManifests>
+    <GenerateManifests>false</GenerateManifests>
   </PropertyGroup>
   <PropertyGroup>
     <SignManifests>true</SignManifests>
@@ -79,6 +79,15 @@
   </PropertyGroup>
   <PropertyGroup>
     <DelaySign>false</DelaySign>
+  </PropertyGroup>
+  <PropertyGroup>
+    <TargetZone>LocalIntranet</TargetZone>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationManifest>Properties\app.manifest</ApplicationManifest>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>icon.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="EntityFramework, Version=6.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL">
@@ -113,6 +122,7 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
+    <Content Include="icon.ico" />
     <Content Include="x64\SQLite.Interop.dll">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
@@ -121,14 +131,19 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Files\SimpleNetFile.cs" />
     <Compile Include="Files\SMp3.cs" />
-    <Compile Include="Loader\ILoader.cs" />
+    <Compile Include="Loader\IFace\ILoader.cs" />
     <Compile Include="Loader\VKontakte\Audio\Search.cs" />
     <Compile Include="Loader\VKontakte\Photos\Get.cs" />
     <Compile Include="Loader\VKontakte\Photos\GetAlbums.cs" />
+    <Compile Include="Loader\VKontakte\Wall\Get.cs" />
+    <Compile Include="Loader\VKontakte\Wall\PaginationSimple.cs" />
     <Compile Include="Utils\BlockingList.cs" />
     <Compile Include="Utils\Exts.cs" />
-    <Compile Include="VKAPI\APIQuery.cs" />
+    <Compile Include="Utils\UnixTimestampJsonConverter.cs" />
+    <Compile Include="VKAPI\ApiExpression.cs" />
+    <Compile Include="VKAPI\ApiQuery.cs" />
     <Compile Include="API\AudioApi.cs" />
     <Compile Include="API\VKStorage.cs" />
     <Compile Include="Browser.cs">
@@ -147,7 +162,7 @@
     <Compile Include="Files\Folder.cs" />
     <Compile Include="Files\Mp3.cs" />
     <Compile Include="Files\Photo.cs" />
-    <Compile Include="Files\Readme.cs" />
+    <Compile Include="Files\PlainText.cs" />
     <Compile Include="Files\Settings.cs" />
     <Compile Include="Files\SettingsXls.cs" />
     <Compile Include="Files\ThreadExecutor.cs" />
@@ -159,6 +174,7 @@
     <Compile Include="Utils\JSON.cs" />
     <Compile Include="Utils\ShellLink\FileIcon.cs" />
     <Compile Include="Utils\ShellLink\ShellLink.cs" />
+    <Compile Include="VKAPI\IApiQuery.cs" />
     <Compile Include="VKAPI\SerializationObject.cs" />
     <Compile Include="VKAPI\VKAPI.cs" />
     <Compile Include="VKAPI\VKAPILibrary.cs" />
@@ -174,6 +190,7 @@
       <DesignTime>True</DesignTime>
     </Compile>
     <None Include="packages.config" />
+    <None Include="Properties\app.manifest" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>

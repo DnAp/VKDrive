@@ -322,3 +322,6 @@ AssocingFileExtension=Связывание %1 с файлами %2...
 AutoStartProgramGroupDescription=Автозапуск:
 AutoStartProgram=Автоматически запускать %1
 AddonHostProgramNotFound=%1 не найден в указанной вами папке.%n%nВы всё равно хотите продолжить?
+VKDriveOld=У вас уже установлена более новая версия VKDrive.%nПрограма установки будет закрыта.
+DokanInstallFail=Установка драйвера Dokan не удалась!
+;DokanInstallFail=Dokan installer failed to run!

@@ -104,7 +104,8 @@ namespace VKDrive.API
         {
             Dictionary<string, string> p = new Dictionary<string, string>();
             p.Add("owner_id", param["owner_id"]);
-            return VKAPI.Vkapi.Instance.StartTaskSync(new VKAPI.ApiQuery("audio.GetCount", p)).ToObject<int>();
+            var res = VKAPI.Vkapi.Instance.StartTaskSync(new VKAPI.ApiQuery("audio.getCount", p));
+	        return res.ToObject<int>();
         }
 
         public static void LoadMp3(Dictionary<string, string> param, IList<VFile> files)
@@ -118,39 +119,40 @@ namespace VKDrive.API
             int countOnStep = 500; // Сколько забирать за шаг
             int pageCount = Convert.ToInt32(Math.Ceiling(Convert.ToDecimal(audioCount) / countOnStep));
 
-            Dictionary<string, string> paramSend = new Dictionary<string, string>(param);
+	        Dictionary<string, string> paramSend = new Dictionary<string, string>(param)
+	        {
+		        {"count", countOnStep.ToString()},
+		        {"offset", "0"}
+	        };
 
-            paramSend.Add("count", countOnStep.ToString());
-            paramSend.Add("offset", "0");
-
-            for (int page = 0; page < pageCount; page++)
+	        for (int page = 0; page < pageCount; page++)
             {
                 paramSend["offset"] = (page * countOnStep).ToString();
                 JObject apiRequest = (JObject)VKAPI.Vkapi.Instance.StartTaskSync(new VKAPI.ApiQuery("audio.get", paramSend));
                 JArray items = (JArray)apiRequest.GetValue("items");
                 foreach (JToken item in items)
                 {
-                    SerializationObject.Audio audio = item.ToObject<SerializationObject.Audio>();
-                    Mp3 finfo = new Mp3(audio);
+                    var audio = item.ToObject<SerializationObject.Audio>();
+                    var finfo = new Mp3(audio);
                     if (albumsKeyValue.Count == 0)
                     {
                         files.Add(finfo);
                     }
                     else
                     {
-                        ((Folder)albumsKeyValue[0]).ChildsAdd(finfo);
+                        albumsKeyValue[0].ChildsAdd(finfo);
                         if (audio.AlbumId != 0)
                         {
                             // Здесь ньюанс, в ChildsAdd есть уникальность которая изменяет имя. 
                             // Но так как в общий список мы добавляем первым, то имя файла будет уникальное всегда
-                            ((Folder)albumsKeyValue[audio.AlbumId]).ChildsAdd(finfo);
+                            albumsKeyValue[audio.AlbumId].ChildsAdd(finfo);
                         }
                     }
                 }
                 
             }
 
-            foreach (Folder folder in albumsKeyValue.Values)
+            foreach (var folder in albumsKeyValue.Values)
             {
                 folder.IsLoaded = true;
             }

@@ -39,20 +39,15 @@ namespace VKDrive.Dris
 	            {
 		            RootNode.ChildsAdd(new Folder(folderName, new Loader.VKontakte.Audio.Search(folderName)));
 	            }
-            }
-            else
-            {
-                return false;
-            }
-            return true;
+				return true;
+			}
+	        return false;
         }
 
 
         public override int CreateDirectory(string filename, DokanFileInfo info)
         {
-            Folder folder = new Folder(filename);
-            folder.Property.Add("type", "search");
-            RootNode.ChildsAdd(folder);
+            RootNode.ChildsAdd(new Folder(filename, new Loader.VKontakte.Audio.Search(filename)));
 
             SaveDirectoriesList();
             return DokanNet.DOKAN_SUCCESS;
@@ -60,13 +55,15 @@ namespace VKDrive.Dris
 
         private void SaveDirectoriesList()
         {
-            string files = "";
-            foreach( var file in RootNode.Childs ) {
-                if(file.GetType() == typeof(Folder)){
-                    files += file.FileName+"\n";
-                }
-            }
-            API.VkStorage.Set(StorageKey, files.Trim());
+            var files = "";
+	        foreach (var file in RootNode.Childs)
+	        {
+		        if (file.GetType() == typeof (Folder))
+		        {
+			        files += file.FileName + "\n";
+		        }
+	        }
+	        API.VkStorage.Set(StorageKey, files.Trim());
         }
 
         public override int DeleteDirectory(string filename, DokanFileInfo info)
@@ -74,7 +71,7 @@ namespace VKDrive.Dris
             var node = FindFiles(filename);
 
             if (node == null)
-                return -1;
+                return DokanNet.ERROR_FILE_NOT_FOUND;
             RootNode.Childs.Remove(node);
             SaveDirectoriesList();
             return DokanNet.DOKAN_SUCCESS;
@@ -85,7 +82,7 @@ namespace VKDrive.Dris
         {
             this.DeleteDirectory(oldName, info);
             this.CreateDirectory(newName, info);
-            return 0;
+            return DokanNet.DOKAN_SUCCESS;
         }
     }
 }

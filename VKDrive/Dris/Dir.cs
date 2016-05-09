@@ -120,7 +120,7 @@ namespace VKDrive.Dris
             System.Collections.ArrayList files,
             DokanFileInfo info)
         {
-            VFile file = FindFiles(filename);
+            var file = FindFiles(filename);
             if (file == null)
                 return DokanNet.DOKAN_SUCCESS;
 
@@ -135,7 +135,7 @@ namespace VKDrive.Dris
                 LoadFile((Folder)file);
             }
 
-            foreach (VFile currentNode in ((Folder)file).Childs)
+            foreach (var currentNode in ((Folder)file).Childs)
             {
                 if(!currentNode.IsHiddenFile)
                     files.Add(currentNode);
@@ -191,7 +191,7 @@ namespace VKDrive.Dris
                 HttpWebRequest webReq = (HttpWebRequest)WebRequest.Create(((Download)file).Url);
                 webReq.Timeout = Properties.Settings.Default.Timeout * 1000;
                 webReq.Method = "HEAD";
-                System.Net.WebResponse result = webReq.GetResponse();
+                var result = webReq.GetResponse();
                 file.Length = result.ContentLength;
                 result.Close();
             }

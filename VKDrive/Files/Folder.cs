@@ -1,12 +1,7 @@
 ﻿using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-using VKDrive.Loader;
+using VKDrive.Loader.IFace;
 using VKDrive.Utils;
 
 namespace VKDrive.Files
@@ -67,10 +62,10 @@ namespace VKDrive.Files
         private void Init()
         {
             Attributes = System.IO.FileAttributes.Directory;
-            Childs = new BlockingList<VFile>() { new PlainText("Идет загрузка.txt") };
+            Childs = new BlockingList<VFile> { new PlainText("Идет загрузка.txt") };
         }
 
-        public new string toString()
+        public override string ToString()
         {
             return base.ToString() + " " + Property.Select(s => s.ToString());
         }
@@ -117,10 +112,10 @@ namespace VKDrive.Files
 
         private void GroupFile()
         {
-            if (Childs.Count > 500)
-            {
-                var maxFile = 500;
-                /*if (Childs.First().GetType() == typeof(Folder))
+	        if (Childs.Count <= 500)
+				return;
+	        const int maxFile = 500;
+	        /*if (Childs.First().GetType() == typeof(Folder))
                 {
                     maxFile = 100;
                 }
@@ -129,27 +124,25 @@ namespace VKDrive.Files
                     return;
                 }*/
 
-                BlockingList<VFile> replaceChilds = new BlockingList<VFile>();
-                List<VFile> copy = Childs.Select(item => item).ToList(); // clone list
-                copy.Sort(delegate(VFile a, VFile b) { return a.FileName.CompareTo(b.FileName); });
-                Folder fNode;
-                for (int i = 0; i <= (copy.Count / maxFile); i++)
-                {
-                    int residue = copy.Count - (i * maxFile); // остаток
-                    residue = residue < maxFile ? residue : maxFile;
-                    IList<VFile> tmp = copy.GetRange(i * maxFile, residue);
-                    String folderName = VFile.ClearName(tmp[0].FileName).Substring(0, 1) + ".." + VFile.ClearName(tmp[residue - 1].FileName).Substring(0, 1);
-                    fNode = new Folder(folderName);
+	        BlockingList<VFile> replaceChilds = new BlockingList<VFile>();
+	        List<VFile> copy = Childs.Select(item => item).ToList(); // clone list
+	        copy.Sort((a, b) => string.Compare(a.FileName, b.FileName, StringComparison.Ordinal));
+	        for (var i = 0; i <= (copy.Count / maxFile); i++)
+	        {
+		        var residue = copy.Count - (i * maxFile); // остаток
+		        residue = residue < maxFile ? residue : maxFile;
+		        IList<VFile> tmp = copy.GetRange(i * maxFile, residue);
+		        var folderName = VFile.ClearName(tmp[0].FileName, false).Substring(0, 1) + ".." + VFile.ClearName(tmp[residue - 1].FileName, false).Substring(0, 1);
+		        var fNode = new Folder(folderName);
 
-                    foreach (VFile curFile in tmp)
-                    {
-                        fNode.Childs.Add(curFile);
-                    }
-                    fNode.IsLoaded = true;
-                    replaceChilds.Add(fNode);
-                }
-                Childs = replaceChilds;
-            }
+		        foreach (VFile curFile in tmp)
+		        {
+			        fNode.Childs.Add(curFile);
+		        }
+		        fNode.IsLoaded = true;
+		        replaceChilds.Add(fNode);
+	        }
+	        Childs = replaceChilds;
         }
 
         public override int ReadFile(

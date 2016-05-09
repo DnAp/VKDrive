@@ -1,20 +1,16 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using vbAccelerator.Components.Shell;
+using VKDrive.Utils.ShellLink;
 
 namespace VKDrive.Files
 {
     /// <summary>
     /// Этот класс нужно юзать вместе с SettingsXls
     /// </summary>
-    class Settings : VFile
+    internal class Settings : VFile
     {
         static string _settingsLnk = null;
-        static protected Object SettingsLnkLock = new Object();
+        protected static object SettingsLnkLock = new object();
         static ushort _settingsCount = 0;
         
         public Settings(string name)
@@ -52,16 +48,19 @@ namespace VKDrive.Files
             }
         }
 
+	    
         public override int ReadFile(byte[] buffer, ref uint readBytes, long offset, Dokan.DokanFileInfo info)
         {
-            if (offset >= Length)
+	        if (offset < 0)
+				throw new ArgumentOutOfRangeException(nameof(readBytes));
+	        if (offset >= Length)
             {
                 readBytes = 0;
                 return Dokan.DokanNet.DOKAN_SUCCESS;
             }
             lock (SettingsLnkLock)
             {
-                FileStream stream = new FileStream(_settingsLnk, FileMode.Open);
+                var stream = new FileStream(_settingsLnk, FileMode.Open);
 
                 readBytes = Convert.ToUInt32(stream.Read(buffer, Convert.ToInt32(offset), buffer.Length));
                 stream.Close();

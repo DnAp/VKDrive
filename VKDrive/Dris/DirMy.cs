@@ -1,11 +1,4 @@
-﻿using Dokan;
-using Newtonsoft.Json.Linq;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
+﻿using System.Collections.Generic;
 using VKDrive.API;
 using VKDrive.Files;
 using VKDrive.VKAPI;
@@ -19,14 +12,17 @@ namespace VKDrive.Dris
             RootNode = new Folder("");
             lock (RootNode)
             {
-                Folder folder = new Folder("Аудиозаписи");
+                var folder = new Folder("Аудиозаписи");
                 folder.Property.Add("type", "AudioApi.ExecuteGetAlbums");
                 RootNode.Childs.Add(folder);
 
                 folder = new Folder("Фотографии", new Loader.VKontakte.Photos.GetAlbums(VkapiLibrary.Instance.UserId));
                 RootNode.Childs.Add(folder);
-                
-                RootNode.IsLoaded = true;
+
+				folder = new Folder("Стена(beta)", new Loader.VKontakte.Wall.Get(VkapiLibrary.Instance.UserId));
+				RootNode.Childs.Add(folder);
+
+				RootNode.IsLoaded = true;
             }
         }
         
@@ -36,7 +32,7 @@ namespace VKDrive.Dris
             if (file.Property["type"] == "AudioApi.ExecuteGetAlbums")
             {
                 AudioApi.ExecuteGetAlbums(new Dictionary<string, string>(){
-				        {"owner_id", VKAPI.VkapiLibrary.Instance.UserId.ToString()}
+				        {"owner_id", VkapiLibrary.Instance.UserId.ToString()}
 			        }, file.Childs);
             }
             else if (file.Property["type"] == "audio.getInAlbum")
@@ -49,7 +45,7 @@ namespace VKDrive.Dris
             else if (file.Property["type"] == "wait")
             {
                 // Он там грузится в паралельном потоке. Подождать нужно
-                int i = 0;
+                var i = 0;
                 while (!file.IsLoaded && i<10) // 1 сек максимум
                 {
                     i++;

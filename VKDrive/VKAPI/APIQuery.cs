@@ -1,18 +1,13 @@
 ﻿using Newtonsoft.Json.Linq;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using static System.String;
 
 namespace VKDrive.VKAPI
 {
-    class ApiQuery
+	internal class ApiQuery : IApiQuery
     {
         public string Method;
         public Dictionary<string, string> Param;
-        public int Type;
-        public JToken Responce = null;
         
         public ApiQuery(string method)
         {
@@ -30,29 +25,27 @@ namespace VKDrive.VKAPI
 
         private void Construct(string method, Dictionary<string, string> param, int type)
         {
-            this.Method = method;
-            this.Param = param;
-            this.Type = type;
+            Method = method;
+            Param = param;
         }
 
-        private string JsonEncode(string val)
+        private static string JsonEncode(string val)
         {
             // simple json encode \ => \\  " => \"
             return "\"" + val.Replace("\\", "\\\\").Replace("\"", "\\\"").Replace("\n", "\\n") + "\"";
         }
 
-        override public string ToString()
+        public override string ToString()
         {
-            string[] param = new string[Param.Count];
-            int i = 0;
-            foreach (KeyValuePair<string, string> kv in Param)
+            var param = new string[Param.Count];
+            var i = 0;
+            foreach (var kv in Param)
             {
                 param[i] = JsonEncode(kv.Key)+":"+ JsonEncode(kv.Value);
                 i++;
             }
 
-            return "API." + Method + "({" + String.Join(",", param) + "})";
-
+            return "result.push(API." + Method + "({" + Join(",", param) + "}));";
         }
     }
 }

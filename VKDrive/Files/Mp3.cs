@@ -16,23 +16,22 @@ namespace VKDrive.Files
 
         private readonly ILog _log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        public Mp3(SerializationObject.Audio curAudio) : base("")
+        public Mp3(SerializationObject.Audio curAudioWithAlbum) : base("")
         {
-            FileName = Mp3.EscapeFileName(curAudio.Artist + " - " + curAudio.Title) + ".mp3";
-            Url = curAudio.Url;
-            Uid = curAudio.OwnerId;
-            Aid = curAudio.Id;
+            FileName = Mp3.EscapeFileName(curAudioWithAlbum.Artist + " - " + curAudioWithAlbum.Title) + ".mp3";
+            Url = curAudioWithAlbum.Url;
+            Uid = curAudioWithAlbum.OwnerId;
+            Aid = curAudioWithAlbum.Id;
             _log.Debug("Make mp3 " + FileName + " : "+Url);
         }
 
         public override int ReadFile(
             byte[] buffer,
-            ref uint readBytes,
+            ref uint readingBytes,
             long offset,
             Dokan.DokanFileInfo info)
         {
-            int res = DownloadManager.Instance.GetBlock(this, buffer, ref readBytes, offset);
-            return res;
+			return DownloadManager.Instance.GetBlock(this, buffer, ref readingBytes, offset);
         }
 
         /*public override string getUniqueId()
@@ -62,14 +61,7 @@ namespace VKDrive.Files
             }
             return true;
         }
-
-        public void LoadByXml(XElement attr)
-        {
-            FileName = Mp3.EscapeFileName(attr.Element("artist").Value + " - " + attr.Element("title").Value) + ".mp3";
-            Url = (string)attr.Element("url");
-            Uid = Convert.ToInt32(attr.Element("owner_id").Value);
-            Aid = Convert.ToInt32(attr.Element("aid").Value);
-        }
+		
 
     }
 }

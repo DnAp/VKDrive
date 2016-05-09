@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 using VKDrive.Files;
+using VKDrive.Loader.IFace;
 using VKDrive.VKAPI;
 
 namespace VKDrive.Loader.VKontakte.Audio

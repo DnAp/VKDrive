@@ -4,10 +4,10 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   using System.IO;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   using System.Net;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   using System.Text;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   using System.Threading;
 
 namespace VKDrive.VKAPI
 {
@@ -21,14 +21,15 @@ namespace VKDrive.VKAPI
     }
 
 
-    class Vkapi : IDisposable
+	internal class Vkapi : IDisposable
     {
-        const int Timeout = 1000 / 3;
-        ConcurrentQueue<ApiQuery> _concurrentQueue = new ConcurrentQueue<ApiQuery>();
-        bool _isAlive = true;
+	    private const int Timeout = 1000 / 3;
+		private const int MaxQueryInExecute = 25;
+	    private readonly ConcurrentQueue<IApiQuery> _concurrentQueue = new ConcurrentQueue<IApiQuery>();
+        private bool _isAlive = true;
         private static Vkapi _instance;
 
-        private AutoResetEvent _resetEvent = new AutoResetEvent(false);
+        private readonly AutoResetEvent _resetEvent = new AutoResetEvent(false);
         
         private static readonly ILog Log = LogManager.GetLogger("VKAPI");
 
@@ -49,7 +50,7 @@ namespace VKDrive.VKAPI
             }
         }
 
-        public JToken StartTaskSync(ApiQuery query)
+        public JToken StartTaskSync(IApiQuery query)
         {
             _concurrentQueue.Enqueue(query);
             byte i = 0;
@@ -63,9 +64,10 @@ namespace VKDrive.VKAPI
                 }
                 i++;
             } while (query.Responce == null);
-            if (query.Responce.GetType() == typeof(JObject))
+	        JToken error;
+	        if (query.Responce.GetType() == typeof(JObject) && ((JObject)query.Responce).TryGetValue("error", out error))
             {
-                TryThrowException(((JObject)query.Responce).GetValue("error"));
+                TryThrowException(error);
             }
             
 
@@ -90,36 +92,45 @@ namespace VKDrive.VKAPI
             while (_isAlive)
             {
                 Thread.Sleep(Timeout);
-                ApiQuery query;
-                var qList = new List<ApiQuery>();
-                var executeQuery = "return [";
-                while (_concurrentQueue.TryDequeue(out query))
+				IApiQuery query;
+                var qList = new List<IApiQuery>();
+                var executeQuery = "var result = [];";
+	            var i = 0;
+                while (i<25 && _concurrentQueue.TryDequeue(out query))
                 {
-                    qList.Add(query);
-                    executeQuery += query + ",";
-                }
-                if(qList.Count == 0)
+	                qList.Add(query);
+                    executeQuery += query.ToString();
+					i++;
+				}
+				if(qList.Count == 0)
                 {
                     _resetEvent.Set();
                     continue;
                 }
-                executeQuery += "0];";
+
+				Log.Info("Query execute "+i+"/"+MaxQueryInExecute);
+
+				executeQuery += "return result;";
 	            var param = new Dictionary<string, string> {{"code", executeQuery}};
-	            var executeApiQuery = new ApiQuery("execute", param, VkapiLibrary.Json);
+				var executeApiQuery = new ApiQuery("execute", param, VkapiLibrary.Json);
 
-                var jsonSrc = VkapiLibrary.Instance.Execute(executeApiQuery);
-                //Console.WriteLine(jsonSrc);
+				var jsonSrc = Execute(executeApiQuery);
+
+				//Console.WriteLine(jsonSrc);
+				Log.Debug("Api multiquery: " + jsonSrc);
                 var jObject = JObject.Parse(jsonSrc);
-                
-                TryThrowException(jObject.GetValue("error"));
-
-                var result = jObject.GetValue("response");
+	            JToken error;
+	            if (jObject.TryGetValue("error", out error))
+	            {
+		            TryThrowException(jObject.GetValue("error"));
+	            }
+	            var result = jObject.GetValue("response");
                 if (result.GetType() != typeof(JArray) || ((JArray)result).Count < qList.Count)
                 {
                     Log.Error("VK API EXECUTE ERROR: unknown responce :" + jObject);
                     throw new Exception("VK API EXECUTE ERROR: unknown responce :"+ jObject);
                 }
-                var i = 0;
+                i = 0;
                 var errorI = 0;
                 foreach (var res in (JArray)result)
                 {
@@ -143,7 +154,47 @@ namespace VKDrive.VKAPI
             }
         }
 
-        public void Stop()
+		private static string Execute(ApiQuery apiQuery)
+		{
+			var param = new Dictionary<string, string>(apiQuery.Param)
+			{
+				{"access_token", VkapiLibrary.Instance.AccessTokien},
+				{"lang", "ru"},
+				{"v", "5.37"}
+			};
+
+
+			var url = "https://api.vk.com/method/" + apiQuery.Method;
+			var postData = "";
+			foreach (var val in param)
+			{
+				postData += val.Key + "=" + Uri.EscapeDataString(val.Value) + "&";
+			}
+			Log.Debug("API Request " + url + " " + postData);
+			var byteArray = Encoding.UTF8.GetBytes(postData);
+
+			// todo keep-alive
+			var webReq = (HttpWebRequest)WebRequest.Create(url);
+			webReq.Timeout = Properties.Settings.Default.Timeout * 1000;
+			webReq.Method = "POST";
+			webReq.ContentType = "application/x-www-form-urlencoded";
+			//WebReq.Headers["Cookie"] = "remixlang=0; remixchk=5; remixsid=" + SID;
+
+			webReq.ContentLength = byteArray.Length;
+			Stream dataStream = webReq.GetRequestStream();
+			dataStream.Write(byteArray, 0, byteArray.Length);
+			dataStream.Close();
+
+			var stream = webReq.GetResponse().GetResponseStream();
+			if (stream == null)
+			{
+				Log.Error("VK API EXECUTE ERROR(response null)" + url);
+				throw new Exception("VK API EXECUTE ERROR");
+			}
+			return new StreamReader(stream, Encoding.UTF8).ReadToEnd();
+		}
+
+		public void Stop()
         {
             _isAlive = false;
         }

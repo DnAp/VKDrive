@@ -1,11 +1,10 @@
 using System;
-using System.ComponentModel;
 using System.Drawing;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
 
-namespace vbAccelerator.Components.Shell
+namespace VKDrive.Utils.ShellLink
 {
 	#region ShellLink Object
 	/// <summary>
@@ -16,9 +15,9 @@ namespace vbAccelerator.Components.Shell
 		#region ComInterop for IShellLink
 
 		#region IPersist Interface
-		[ComImportAttribute()]
-		[GuidAttribute("0000010C-0000-0000-C000-000000000046")]
-		[InterfaceTypeAttribute(ComInterfaceType.InterfaceIsIUnknown)]
+		[ComImport()]
+		[Guid("0000010C-0000-0000-C000-000000000046")]
+		[InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
 		private interface IPersist
 		{
 			[PreserveSig]
@@ -28,9 +27,9 @@ namespace vbAccelerator.Components.Shell
 		#endregion
 
 		#region IPersistFile Interface
-		[ComImportAttribute()]
-		[GuidAttribute("0000010B-0000-0000-C000-000000000046")]
-		[InterfaceTypeAttribute(ComInterfaceType.InterfaceIsIUnknown)]
+		[ComImport()]
+		[Guid("0000010B-0000-0000-C000-000000000046")]
+		[InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
 		private interface IPersistFile
 		{
 			// can't get this to go if I extend IPersist, so put it here:
@@ -61,9 +60,9 @@ namespace vbAccelerator.Components.Shell
 		#endregion
 
 		#region IShellLink Interface
-		[ComImportAttribute()]
-		[GuidAttribute("000214EE-0000-0000-C000-000000000046")]
-		[InterfaceTypeAttribute(ComInterfaceType.InterfaceIsIUnknown)]
+		[ComImport()]
+		[Guid("000214EE-0000-0000-C000-000000000046")]
+		[InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
 		private interface IShellLinkA
 		{
 			//[helpstring("Retrieves the path and filename of a shell link object")]
@@ -143,9 +142,9 @@ namespace vbAccelerator.Components.Shell
 		}
 
 
-		[ComImportAttribute()]
-		[GuidAttribute("000214F9-0000-0000-C000-000000000046")]
-		[InterfaceTypeAttribute(ComInterfaceType.InterfaceIsIUnknown)]
+		[ComImport()]
+		[Guid("000214F9-0000-0000-C000-000000000046")]
+		[InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
 		private interface IShellLinkW
 		{
 			//[helpstring("Retrieves the path and filename of a shell link object")]
@@ -226,9 +225,9 @@ namespace vbAccelerator.Components.Shell
 		#endregion
 
 		#region ShellLinkCoClass
-		[GuidAttribute("00021401-0000-0000-C000-000000000046")]
-		[ClassInterfaceAttribute(ClassInterfaceType.None)]
-		[ComImportAttribute()]
+		[Guid("00021401-0000-0000-C000-000000000046")]
+		[ClassInterface(ClassInterfaceType.None)]
+		[ComImport()]
 		private class CShellLink{}
 
 		#endregion
@@ -262,7 +261,7 @@ namespace vbAccelerator.Components.Shell
 
 		#region IShellLink Private structs
 
-		[StructLayoutAttribute(LayoutKind.Sequential, Pack=4, Size=0, CharSet=CharSet.Unicode)]
+		[StructLayout(LayoutKind.Sequential, Pack=4, Size=0, CharSet=CharSet.Unicode)]
 		private struct Win32FindDataw
 		{
 			public uint dwFileAttributes;
@@ -279,7 +278,7 @@ namespace vbAccelerator.Components.Shell
 			public string cAlternateFileName;
 		}
 
-		[StructLayoutAttribute(LayoutKind.Sequential, Pack=4, Size=0, CharSet=CharSet.Ansi)]
+		[StructLayout(LayoutKind.Sequential, Pack=4, Size=0, CharSet=CharSet.Ansi)]
 		private struct Win32FindDataa
 		{
 			public uint dwFileAttributes;
@@ -296,7 +295,7 @@ namespace vbAccelerator.Components.Shell
 			public string cAlternateFileName;
 		}
 
-		[StructLayoutAttribute(LayoutKind.Sequential, Pack=4, Size=0)]
+		[StructLayout(LayoutKind.Sequential, Pack=4, Size=0)]
 		private struct Filetime 
 		{
 			public uint dwLowDateTime;

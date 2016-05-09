@@ -35,30 +35,36 @@ namespace VKDrive
             {
                 // Докан есть, поищем удалятор.
                 // c:\Program Files (x86)\Dokan\DokanLibrary\
-                System.Windows.Forms.MessageBox.Show("Ошибка системы. Для исправления проделай следующие действия:\n"
-                    + "1) Удали драйвер Dokan, програма удаления запустится автоматически.\n"
-                    + "2) Перезагрузись, это действительно важно.\n"
-                    + "3) Запусти ВК Драйв повторно.\n"
-                    + "В случае повторения ошибки обратитесь к системному администратору.",
-                    "Проблема с драйвером Dokan", 
+                System.Windows.Forms.MessageBox.Show(@"Ошибка системы. Для исправления проделай следующие действия:\n"
+                    + @"1) Удали драйвер Dokan, програма удаления запустится автоматически.\n"
+                    + @"2) Перезагрузись, это действительно важно.\n"
+                    + @"3) Запусти ВК Драйв повторно.\n"
+                    + @"В случае повторения ошибки обратитесь к системному администратору.",
+                    @"Проблема с драйвером Dokan", 
                     System.Windows.Forms.MessageBoxButtons.OK,
                     System.Windows.Forms.MessageBoxIcon.Error);
                 try
                 {
-                    Process pr = Process.Start(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) + "\\Dokan\\DokanLibrary\\DokanUninstall.exe");
-                    pr.WaitForExit();
-                    pr.Close();
+                    var pr = Process.Start(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles) + "\\Dokan\\DokanLibrary\\DokanUninstall.exe");
+	                if (pr != null)
+	                {
+		                pr.WaitForExit();
+		                pr.Close();
+	                }
                 }
-                catch (Exception) { }
+                catch (Exception)
+                {
+	                // ignored
+                }
             }
             else
             {
                 if (!Properties.Settings.Default.FirstStart || twoStart)
                 {
                     System.Windows.Forms.DialogResult result = System.Windows.Forms.MessageBox.Show(
-                        "Не установлен драйвер Dokan. \nЗапустить инсталятор драйвера?"
-                            +"\nВ случае если эта ошибка будет повторятся обратись к системному администратору с просьбой переустановить Dokan",
-                        "Запустить инсталятор драйвера Dokan?",
+                        @"Не установлен драйвер Dokan. \nЗапустить инсталятор драйвера?"
+                            +@"\nВ случае если эта ошибка будет повторятся обратись к системному администратору с просьбой переустановить Dokan",
+                        @"Запустить инсталятор драйвера Dokan?",
                         System.Windows.Forms.MessageBoxButtons.YesNo,
                         System.Windows.Forms.MessageBoxIcon.Exclamation
                     );
@@ -96,7 +102,10 @@ namespace VKDrive
                 Dokan.DokanNet.DokanUnmount(Properties.Settings.Default.MountPoint[0]);
                 Dokan.DokanNet.DokanRemoveMountPoint(Properties.Settings.Default.MountPoint + ":\\");
             }
-            catch (Exception) { }
+            catch (Exception)
+            {
+	            // ignored
+            }
         }
 
         public static bool IsWorking()
@@ -107,18 +116,18 @@ namespace VKDrive
         private static void StartMainFs(object obj)
         {
             try {
-                DokanOptions opt = new DokanOptions();
-
-                opt.MountPoint = Properties.Settings.Default.MountPoint + ":\\";
-                opt.DebugMode = false;
-                opt.UseStdErr = true;
-
-                opt.NetworkDrive = true;
-                opt.VolumeLabel = "VKDrive";
-                opt.UseKeepAlive = false;
-
-                MainFs = new MainFs();
-                Status = DokanNet.DokanMain(opt, MainFs);
+	            var dokanOptions = new DokanOptions
+	            {
+		            MountPoint = Properties.Settings.Default.MountPoint + ":\\",
+		            DebugMode = false,
+		            UseStdErr = true,
+		            NetworkDrive = false,
+		            VolumeLabel = "VKDrive",
+		            UseKeepAlive = false
+	            };
+				
+	            MainFs = new MainFs();
+                Status = DokanNet.DokanMain(dokanOptions, MainFs);
 
                 switch (Status)
                 {

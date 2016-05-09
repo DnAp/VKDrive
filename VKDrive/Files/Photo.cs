@@ -29,7 +29,7 @@ namespace VKDrive.Files
                 name = photo.Id.ToString();
             }
 
-            this.FileName = ClearName(name.Trim() + ".jpg");
+            this.FileName = ClearName(name.Trim() + ".jpg", false);
             Pid = photo.Id;
             Url = photo.GetSrc();
             DateTime unixTimeStamp = new DateTime(1970, 1, 1, 0, 0, 0, 0);

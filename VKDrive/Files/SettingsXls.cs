@@ -31,18 +31,18 @@ namespace VKDrive.Files
 
         }
 
-        public override int ReadFile(byte[] buffer, ref uint readBytes, long offset, Dokan.DokanFileInfo info)
+        public override int ReadFile(byte[] buffer, ref uint readingBytes, long offset, Dokan.DokanFileInfo info)
         {
             if (offset >= _text.Length)
             {
-                readBytes = 0;
+                readingBytes = 0;
                 return Dokan.DokanNet.DOKAN_SUCCESS;
             }
 
-            readBytes = Convert.ToUInt32(offset + buffer.Length > _text.Length ? _text.Length - offset : buffer.Length);
+            readingBytes = Convert.ToUInt32(offset + buffer.Length > _text.Length ? _text.Length - offset : buffer.Length);
             // Тут ограничение нужно по длинне
             //text.CopyTo(buffer, offset);
-            Array.Copy(_text, offset, buffer, 0, readBytes);
+            Array.Copy(_text, offset, buffer, 0, readingBytes);
             return Dokan.DokanNet.DOKAN_SUCCESS;
         }
     }

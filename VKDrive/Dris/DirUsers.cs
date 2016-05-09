@@ -3,11 +3,7 @@ using log4net;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 using VKDrive.API;
 using VKDrive.Files;
 using VKDrive.VKAPI;
@@ -26,12 +22,12 @@ namespace VKDrive.Dris
             RootNode.IsLoaded = false;
         }
 
-        public override bool _LoadFile(Files.Folder file)
+        public override bool _LoadFile(Folder file)
         {
-            _log.Debug("_LoadFile " + file.toString());
+            _log.Debug("_LoadFile " + file);
             if (file.Property["type"] == "friends.getLists")
             {
-                JObject apiResult = (JObject)VKAPI.Vkapi.Instance.StartTaskSync(new VKAPI.ApiQuery("friends.getLists"));
+                JObject apiResult = (JObject)Vkapi.Instance.StartTaskSync(new ApiQuery("friends.getLists"));
                 JArray items = (JArray)apiResult.GetValue("items");
                 
                 Folder curFolder = new Folder("Все");
@@ -68,7 +64,7 @@ namespace VKDrive.Dris
                     param.Add("list_id", key.ToString());
                 }
 
-                JObject apiResult = (JObject)VKAPI.Vkapi.Instance.StartTaskSync(new VKAPI.ApiQuery("friends.get", param));
+                JObject apiResult = (JObject)Vkapi.Instance.StartTaskSync(new ApiQuery("friends.get", param));
                 JArray items = (JArray)apiResult.GetValue("items");
 
                 foreach (JObject item in items)

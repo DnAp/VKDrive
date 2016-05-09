@@ -1,8 +1,8 @@
 using System;
-using System.Runtime.InteropServices;
 using System.Drawing;
+using System.Runtime.InteropServices;
 
-namespace vbAccelerator.Components.Shell
+namespace VKDrive.Utils.ShellLink
 {
 	/// <summary>
 	/// Enables extraction of icons for any file type from
@@ -27,7 +27,7 @@ namespace vbAccelerator.Components.Shell
 		}
 
 		[DllImport("shell32")]
-	private static extern int SHGetFileInfo (
+		private static extern int SHGetFileInfo (
 			string pszPath, 
 			int dwFileAttributes,
 			ref Shfileinfo psfi, 

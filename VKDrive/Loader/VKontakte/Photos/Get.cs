@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using VKDrive.Files;
+using VKDrive.Loader.IFace;
 using VKDrive.VKAPI;
 
 namespace VKDrive.Loader.VKontakte.Photos

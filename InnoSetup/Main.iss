@@ -2,10 +2,11 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "VKDrive"
-#define MyAppVersion "0.1.0.8"
+#define MyAppVersion GetFileVersion('..\VKDrive\bin\Release\VKDrive.exe')
 #define MyAppPublisher "VDrive"
 #define MyAppURL "http://dnap.su/"
 #define MyAppExeName "VKDrive.exe"
+#define UninstallRegKey "Software\Microsoft\Windows\CurrentVersion\Uninstall\VKDrive_is1"
 
 
 [Setup]
@@ -26,21 +27,14 @@ LicenseFile=..\License.rtf
 OutputBaseFilename=setup
 Compression=lzma
 SolidCompression=yes
-;DefaultDirName={pf}\{#MyAppName}
-DefaultDirName={reg:HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\VKDrive_is1,InstallLocation}
-DisableDirPage=True
-
+DefaultDirName={code:GetDefaultDir}
+;DefaultDirName={reg:HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\VKDrive_is1,InstallLocation}
+DisableDirPage=auto
 
 [Languages]
 Name: "ru"; MessagesFile: "Russian.isl"
 ;Name: "en"; MessagesFile: "compiler:Default.isl"
 ;Name: "de"; MessagesFile: "compiler:Languages\German.isl"
-
-
-[CustomMessages]
-VKDriveOld=The Setup detected application version 
-VKDriveRequired=The installation of {#MyAppName} requires MyApp to be installed.%nInstall MyApp before installing this update.%n%n
-VKDriveTerminated=The setup of update will be terminated.
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: 
@@ -72,7 +66,6 @@ Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChang
 
 
 [Code]
-          
 // shared code for installing the products
 #include "scripts\products.iss"
 // helper functions
@@ -84,50 +77,18 @@ Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChang
 #include "scripts\products\dotnetfx45.iss"
 #include "scripts\products\vcredist2013.iss"
 
-var
-    InstallLocation: String;
 
-function GetInstallString(): String;
-var
-    InstPath: String;
-    InstallString: String;
+function GetStringVersion(FileName: string) : string;
+var 
+    MS, LS : cardinal;
+    V1, V2, V3, V4 : dword;
 begin
-
-    initwinversion();
-    dotnetfx45();
-    vcredist2013();
-
-    MsgBox('1', mbError, MB_OK);
-
-    InstPath := ExpandConstant('Software\Microsoft\Windows\CurrentVersion\Uninstall\VKDrive_is1');
-    InstallString := '';
-    if not RegQueryStringValue(HKLM, InstPath, 'InstallLocation', InstallString) then
-        RegQueryStringValue(HKCU, InstPath, 'InstallLocation', InstallString);
-        Result := InstallString;
-        InstallLocation := InstallString;
-    end;
-
-    function InitializeSetup: Boolean;
-    var
-        V: Integer;
-        sUnInstallString: String;
-        Version: String;
-    begin
-        MsgBox('2', mbError, MB_OK);
-        if RegValueExists(HKEY_LOCAL_MACHINE,'Software\Microsoft\Windows\CurrentVersion\Uninstall\VKDrive_is1', 'UninstallString') then begin
-          MsgBox('3', mbError, MB_OK);
-          RegQueryStringValue(HKEY_LOCAL_MACHINE,'Software\Microsoft\Windows\CurrentVersion\Uninstall\VKDrive_is1', 'DisplayVersion', Version);
-          if Version <= ExpandConstant('{#MyAppVersion}') then begin 
-              Result := True;
-              GetInstallString();
-           end
-           else begin
-              MsgBox('4', mbError, MB_OK);
-              MsgBox(ExpandConstant('{cm:VKDriveOld}'+Version+'.'+#13#10#13#10+'{cm:VKDriveRequired}'+'{cm:VKDriveTerminated}'), mbInformation, MB_OK);
-              Result := False;
-           end;
-        end;
-    end;
+    GetVersionNumbers(FileName, MS, LS );
+    V1 := MS shr 16;
+    V2 := MS and $FFFF;
+    V3 := LS shr 16;
+    V4 := LS and $FFFF;
+    Result := IntToStr(V1)+'.'+IntToStr(V2)+'.'+IntToStr(V3)+'.'+IntToStr(V4);
 end;
 
 
@@ -135,11 +96,65 @@ procedure RunDokanInstaller;
 var
   ResultCode: Integer;
 begin
-  if not Exec(ExpandConstant('{app}\Resurces\DokanInstall_0.8.0-RC2.exe'), '/S', '', SW_SHOWNORMAL,
-    ewWaitUntilTerminated, ResultCode)
-  then
-    MsgBox('Dokan installer failed to run!' + #13#10 +
-      SysErrorMessage(ResultCode), mbError, MB_OK);
+    if CompareText(GetStringVersion(ExpandConstant('{sys}\drivers\dokan.sys')), '6.3.9600.17336') <> 0 then begin
+        if not Exec(ExpandConstant('{app}\Resurces\DokanInstall_0.8.0-RC2.exe'), '/S', '', SW_SHOWNORMAL,
+        ewWaitUntilTerminated, ResultCode)
+      then
+        MsgBox(ExpandConstant('{cm:DokanInstallFail}') + #13#10 + SysErrorMessage(ResultCode), mbError, MB_OK);
+    end;
+end;
+
+
+
+var
+    InstallLocation: String;
+
+function GetInstallString(): String;
+var
+    InstallString: String;
+begin
+    initwinversion();
+    dotnetfx45();
+    vcredist2013();
+
+end;
+
+function GetDefaultDir(Param: string): string;
+var
+    InstPath: String;
+    InstallString: String;
+begin
+    InstPath := ExpandConstant('{#UninstallRegKey}');
+    InstallString := '';
+	if RegValueExists(HKEY_LOCAL_MACHINE, InstPath, 'InstallLocation') then begin
+        RegQueryStringValue(HKEY_LOCAL_MACHINE, InstPath, 'InstallLocation', InstallString);
+        Result := InstallString;
+        InstallLocation := InstallString;
+    end else
+      Result := ExpandConstant('{pf}\{#MyAppName}');
+end;
+
+function InitializeSetup: Boolean;
+var
+    V: Integer;
+    sUnInstallString: String;
+    Version: String;
+begin
+    if RegValueExists(HKEY_LOCAL_MACHINE, ExpandConstant('{#UninstallRegKey}'), 'UninstallString') then begin
+        RegQueryStringValue(HKEY_LOCAL_MACHINE, ExpandConstant('{#UninstallRegKey}'), 'DisplayVersion', Version);
+		if Version <= ExpandConstant('{#MyAppVersion}') then begin 
+            Result := True;
+            GetInstallString();
+        end
+        else begin
+            MsgBox(ExpandConstant('{cm:VKDriveOld}'), mbInformation, MB_OK);
+            Result := False;
+        end;
+    end
+	else begin
+		Result := True;
+		GetInstallString();
+	end;
 end;
 
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using VKDrive.Files;
 using VKDrive.Properties;
 using VKDrive.Utils;
@@ -127,7 +128,25 @@ namespace VKDrive.VKAPI
             }
         }
 
-        [JsonObject(MemberSerialization.OptIn)]
+	    [JsonObject(MemberSerialization.OptIn)]
+	    public class Post
+	    {
+			[JsonProperty("id")]
+			public int Id { get; set; }
+			[JsonProperty("owner_id")]
+			public int OwnerId { get; set; }
+			[JsonProperty("from_id")]
+			public int FromId { get; set; }
+			[JsonProperty("date")]
+			public int Date { get; set; }
+			[JsonProperty("text")]
+			public string Text { get; set; }
+
+
+
+		}
+
+		[JsonObject(MemberSerialization.OptIn)]
         public struct User
         {
             [JsonProperty("id")]
@@ -145,6 +164,25 @@ namespace VKDrive.VKAPI
             [JsonProperty("bdate")]
             public string BirthDate { get; set; }
         }
+
+		[JsonObject(MemberSerialization.OptIn)]
+		public struct WallPost
+		{
+			[JsonProperty("id")]
+			public int Id;
+			[JsonProperty("from_id")]
+			public int FromId;
+			[JsonProperty("owner_id")]
+			public int OwnerId;
+			[JsonProperty("date")]
+			[JsonConverter(typeof(UnixTimestampJsonConverter))]
+			public DateTime Date;
+			[JsonProperty("post_type")]
+			public string PostType;
+			[JsonProperty("text")]
+			public string Text;
+
+		}
 
 	    public static PlainText ExceptionToFile(Exception exception)
 	    {

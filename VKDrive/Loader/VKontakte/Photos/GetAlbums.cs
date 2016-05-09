@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using VKDrive.Files;
+using VKDrive.Loader.IFace;
 using VKDrive.VKAPI;
 
 namespace VKDrive.Loader.VKontakte.Photos

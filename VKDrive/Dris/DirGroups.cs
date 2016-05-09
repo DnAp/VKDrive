@@ -9,7 +9,7 @@ using VKDrive.VKAPI;
 
 namespace VKDrive.Dris
 {
-    class DirGroups : Dir
+	internal class DirGroups : Dir
     {
         const string StorageKey = "DirGroups";
 
@@ -22,8 +22,7 @@ namespace VKDrive.Dris
 
         public override bool _LoadFile(Files.Folder file)
         {
-            JObject apiResult;
-            JArray items;
+            
             if (file.Property["type"] == "groups.get")
             {
                 file.ChildsAdd(new Files.Settings("Добавить группу.lnk"));
@@ -35,8 +34,8 @@ namespace VKDrive.Dris
                         "Такая группа уже существует."
                     ));
 
-                apiResult = (JObject)VKAPI.Vkapi.Instance.StartTaskSync(new VKAPI.ApiQuery("groups.get", new Dictionary<string, string>() { { "extended", "1" } }));
-                items = (JArray)apiResult.GetValue("items");
+				JObject apiResult = (JObject)Vkapi.Instance.StartTaskSync(new ApiQuery("groups.get", new Dictionary<string, string> { { "extended", "1" } }));
+				JArray items = (JArray)apiResult.GetValue("items");
 
                 List<int> gruopIds = new List<int>();
 
@@ -47,10 +46,10 @@ namespace VKDrive.Dris
                     gruopIds.Add(group.Id);
                 }
                 
-                string gids = API.VkStorage.Get(StorageKey);
+                string gids = VkStorage.Get(StorageKey);
                 if (gids.Length > 0)
                 {
-                    JArray values = (JArray)VKAPI.Vkapi.Instance.StartTaskSync(new VKAPI.ApiQuery("groups.getById", new Dictionary<string, string>() { { "group_ids", gids.Replace('\n', ',') } }));
+                    JArray values = (JArray)Vkapi.Instance.StartTaskSync(new ApiQuery("groups.getById", new Dictionary<string, string> { { "group_ids", gids.Replace('\n', ',') } }));
 
                     foreach (JObject item in items)
                     {
@@ -76,9 +75,9 @@ namespace VKDrive.Dris
                     if(e.Data.Contains("code") && e.Data["code"].ToString() == "15" ){
                         // 15:Access denied: group photos are disabled
 
-                        PlainText readme = new PlainText("Аудиозаписи отключены.txt");
-                        readme.SetText(PlainText.GetSubscript());
-                        file.ChildsAdd(readme);
+                        var readmePlainText = new PlainText("Аудиозаписи отключены.txt");
+                        readmePlainText.SetText(PlainText.GetSubscript());
+                        file.ChildsAdd(readmePlainText);
                         return true;
                     }
                     return false;
@@ -112,7 +111,7 @@ namespace VKDrive.Dris
         private Folder CreateGroupFolder(SerializationObject.Group group)
         {
             string gid = group.Id.ToString();
-            Folder curFolder = new Folder(group.Name);
+            var curFolder = new Folder(group.Name);
             curFolder.Property.Add("gid", gid);
 
             Folder subFolder = new Folder("Аудиозаписи");
@@ -124,7 +123,10 @@ namespace VKDrive.Dris
             subFolder = new Folder("Фотографии", new Loader.VKontakte.Photos.GetAlbums(-group.Id));
             curFolder.ChildsAdd(subFolder);
 
-            curFolder.ChildsAdd(
+			subFolder = new Folder("Стена(beta)", new Loader.VKontakte.Wall.Get(-group.Id));
+			curFolder.ChildsAdd(subFolder);
+
+			curFolder.ChildsAdd(
                 new PlainText(
                     "Открыть в браузере.url",
                     PlainText.InternetShortcut("https://vk.com/club" + gid)
