@@ -106,6 +106,24 @@ namespace VKDrive.Properties {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на Для установки обновления нажмите на иконку.
+        /// </summary>
+        internal static string NotifyBallonTipUpgradeText {
+            get {
+                return ResourceManager.GetString("NotifyBallonTipUpgradeText", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Вышла новая версия VKDrive.
+        /// </summary>
+        internal static string NotifyBallonTipUpgradeTitle {
+            get {
+                return ResourceManager.GetString("NotifyBallonTipUpgradeTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на Неизвестная ошибка.
         /// </summary>
         internal static string UnknownError {

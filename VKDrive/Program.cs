@@ -26,8 +26,7 @@ namespace VKDrive
 
 			var log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 			log.Info("Start vkdrive #"+ Process.GetCurrentProcess().Id);
-			
-			
+
 			bool mutexWasCreated;
 			_mutex = new Mutex(true, "VKDrive", out mutexWasCreated);
             if (!mutexWasCreated)
@@ -36,12 +35,6 @@ namespace VKDrive
                 Environment.Exit(0);
             }
 			
-			if (Environment.OSVersion.Version.Major >= 6) //Работаем под Виста или выше? (Автоматический перезапуск с сохранением настроек)
-		    {
-				log.Debug("SetRegisterRecoveryHock");
-                RestartManager.RegisterAppRestart("-recovery"); //Регистрирую рестарт
-				RestartManager.RegisterAppRecovery(); //Регистрирую сохранение данных перед крэшем
-		    }
 			try
 			{
                 Application.Run(new Browser());
