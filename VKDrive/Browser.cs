@@ -233,8 +233,8 @@ namespace VKDrive
 			        // https://oauth.vk.com/login?act=blocked
 
 			        string locationUrl = webBrowser1.Url.AbsoluteUri;
-			        string successUrl = "https://oauth.vk.com/blank.html";
-			        string blockedUrl = "https://oauth.vk.com/login?act=blocked";
+			        const string successUrl = "https://oauth.vk.com/blank.html";
+			        const string blockedUrl = "https://oauth.vk.com/login?act=blocked";
 
 			        if (locationUrl.Length >= blockedUrl.Length && locationUrl.Substring(0, blockedUrl.Length) == blockedUrl)
 			        {
@@ -269,16 +269,15 @@ namespace VKDrive
 			        api.UserId = Convert.ToInt32(sessionData["user_id"]);
 			        api.AccessTokien = (string) sessionData["access_token"];
 
-			        JArray apiResult =
-				        (JArray)
-					        Vkapi.Instance.StartTaskSync(new ApiQuery("users.get",
-						        new Dictionary<string, string> {{"uids", sessionData["user_id"]}}));
-			        SerializationObject.User user = apiResult[0].ToObject<SerializationObject.User>();
+					var apiResult = (JArray) Vkapi.Instance.StartTaskSync(new ApiQuery("users.get", new Dictionary<string, string> {{"uids", sessionData["user_id"]}}));
+			        var user = apiResult[0].ToObject<SerializationObject.User>();
 
 			        ChangeDriverName();
 			        notifyIcon1.Text = @"VKDrive: " + user.FirstName + @" " + user.LastName;
 
-			        DokanInit.Start();
+			        SendStats();
+
+					DokanInit.Start();
 		        }
 	        }
 	        catch (Exception ex)
@@ -287,6 +286,17 @@ namespace VKDrive
 		        MessageBox.Show(ex.Message);
 	        }
         }
+
+	    private void SendStats()
+	    {
+			var timer = new Timer
+			{
+				Interval = 24 * 60 * 60000, // 24h
+				Enabled = true
+			};
+			timer.Tick += (o, args) => Vkapi.Instance.StartTaskAsync(new ApiQuery("stats.trackVisitor"));
+			Vkapi.Instance.StartTaskAsync(new ApiQuery("stats.trackVisitor"));
+		}
 
         private void ToAuthVkPage()
         {

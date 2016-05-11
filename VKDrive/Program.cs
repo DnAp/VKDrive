@@ -19,7 +19,9 @@ namespace VKDrive
 		[STAThread]
 	    private static void Main()
 	    {
-		    XmlConfigurator.Configure();
+#if DEBUG
+			XmlConfigurator.Configure();
+#endif
 		    Application.EnableVisualStyles();
 		    Application.SetCompatibleTextRenderingDefault(false);
 			Application.ThreadException += new ThreadExceptionEventHandler(ThreadException);
