@@ -131,6 +131,7 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Service\GarbageCollector.cs" />
     <Compile Include="Files\SimpleNetFile.cs" />
     <Compile Include="Files\SMp3.cs" />
     <Compile Include="Loader\IFace\ILoader.cs" />
@@ -141,6 +142,7 @@
     <Compile Include="Loader\VKontakte\Wall\PaginationSimple.cs" />
     <Compile Include="Utils\BlockingList.cs" />
     <Compile Include="Utils\CheckUpdate.cs" />
+    <Compile Include="Utils\EasyStats.cs" />
     <Compile Include="Utils\Exts.cs" />
     <Compile Include="Utils\UnixTimestampJsonConverter.cs" />
     <Compile Include="VKAPI\ApiExpression.cs" />

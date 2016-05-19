@@ -26,7 +26,7 @@ namespace VKDrive.Dris
             }
         }
         
-        public override bool _LoadFile(Files.Folder file)
+        public override bool _LoadFile(Folder file)
         {
             
             if (file.Property["type"] == "AudioApi.ExecuteGetAlbums")

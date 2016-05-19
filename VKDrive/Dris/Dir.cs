@@ -2,10 +2,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
-using System.Text;
-using System.Threading.Tasks;
+using System.Reflection;
+using log4net;
 using VKDrive.Files;
 
 namespace VKDrive.Dris
@@ -14,8 +13,9 @@ namespace VKDrive.Dris
     {
         public Dictionary<string, object> Directory;
         public Folder RootNode;
+		private readonly ILog _log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors")]
         public Dir()
         {
             Directory = new Dictionary<string, object>();
@@ -98,13 +98,13 @@ namespace VKDrive.Dris
                     currentNode = ((Folder)currentNode).FindInChilds(dirName);
                     if (currentNode == null)
                     {
-                        Console.WriteLine("Не нашел: " + pathString);
+						_log.Debug("Не нашел: " + pathString);
                         return null;
                     }
                 }
                 catch (Exception)
                 {
-                    Console.WriteLine("Не нашел(exception): " + pathString);
+					_log.Debug("Не нашел(exception): " + pathString);
                     return null;
                 }
             }
@@ -158,10 +158,10 @@ namespace VKDrive.Dris
 
         public virtual int CreateDirectory(string filename, DokanFileInfo info)
         {
-            string[] pathList = filename.Split('\\');
-            string newDirName = pathList[pathList.Length - 1];
+            var pathList = filename.Split('\\');
+            var newDirName = pathList[pathList.Length - 1];
             filename = string.Join("\\", pathList, 0, pathList.Length - 1);
-            VFile file = FindFiles(filename);
+            var file = FindFiles(filename);
             
             if (file != null && file.GetType() == typeof(Folder)) // хз у null есть GetType или нет
             {
@@ -181,14 +181,14 @@ namespace VKDrive.Dris
            FileInformation fileinfo,
            DokanFileInfo info)
         {
-            VFile file = FindFiles(filename);
+            var file = FindFiles(filename);
             if (file == null)
                 return -DokanNet.ERROR_FILE_NOT_FOUND;
 
             if (file.Length == 0 && file is Download)
             {
                 // Это нужно чтоб TC и другие наивные приложения читали корректное кол-во 
-                HttpWebRequest webReq = (HttpWebRequest)WebRequest.Create(((Download)file).Url);
+                var webReq = (HttpWebRequest)WebRequest.Create(((Download)file).Url);
                 webReq.Timeout = Properties.Settings.Default.Timeout * 1000;
                 webReq.Method = "HEAD";
                 var result = webReq.GetResponse();
@@ -207,7 +207,7 @@ namespace VKDrive.Dris
             long offset,
             DokanFileInfo info)
         {
-            VFile file = FindFiles(filename);
+            var file = FindFiles(filename);
             if (file == null)
             {
                 return -DokanNet.ERROR_FILE_NOT_FOUND;

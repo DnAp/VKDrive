@@ -64,12 +64,12 @@ namespace VKDrive
 				if (CheckUpdate.HasNewVersion())
 				{
 					_hasUpdate = true;
-					var timer = new Timer
+					var timer = new System.Timers.Timer
 					{
 						Interval = 3*59*60000, // 2h 57min
 						Enabled = true
 					};
-					timer.Tick += (o, args) => ShowUpgradeBallonTip();
+					timer.Elapsed += (o, args) => ShowUpgradeBallonTip();
 					ShowUpgradeBallonTip();
 				}
 			}).Start();
@@ -274,9 +274,9 @@ namespace VKDrive
 
 			        ChangeDriverName();
 			        notifyIcon1.Text = @"VKDrive: " + user.FirstName + @" " + user.LastName;
-
-			        SendStats();
-
+#if !DEBUG
+					SendStats();
+#endif
 					DokanInit.Start();
 		        }
 	        }

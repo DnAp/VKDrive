@@ -1,12 +1,8 @@
 ﻿using Dokan;
 using log4net;
-using log4net.Config;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using VKDrive.Dris;
 using VKDrive.Files;
 
@@ -17,71 +13,97 @@ namespace VKDrive
 
         #region DokanOperations member
 
-        private readonly Dictionary<string, Dir> _topDirectory;
+        private Dictionary<string, Dir> _rootDirectory;
         private readonly List<VFile> _topFiles;
         private readonly ILog _log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-        public MainFs()
-        {
-	        var drive = Properties.Settings.Default.MountPoint;
-            _log.Debug("Start MainFS");
-            _log.Debug("Db connect");
-            try {
-                Db.Instance.Connect();
-            } catch(Exception e) {
-                _log.Error("Db connect fail", e);
-                throw;
-            }
-            _log.Debug("Make root tree");
-	        _topDirectory = new Dictionary<string, Dir>
-	        {
-		        ["Моя Страница"] = new DirMy(),
-		        ["Мои Друзья"] = new DirUsers(),
-		        ["Мои Группы"] = new DirGroups(),
-		        ["Поиск"] = new DirSearch()
-	        };
+	    public MainFs()
+	    {
+		    var drive = Properties.Settings.Default.MountPoint;
+		    _log.Debug("Start MainFS");
+		    _log.Debug("Db connect");
+		    try
+		    {
+			    Db.Instance.Connect();
+		    }
+		    catch (Exception e)
+		    {
+			    _log.Error("Db connect fail", e);
+			    throw;
+		    }
+		    _log.Debug("Make root tree");
+		    MakeRootDirectory();
 
-	        _topFiles = new List<VFile>();
+		    _topFiles = new List<VFile>();
 
-            PlainText readme = new PlainText("Прочти меня.txt");
-            #region Много текста в readme.txt
-            readme.SetText("Привет!\n"+
-                    "\n"+
-                    "Ты установил приложение VkDrive.\n"+
-                    "\n"+
-                    "Это полноценный виртуальный диск с музыкой и фотографиями из ВКонтакте.\n"+
-                    "Для открытия файлов не нужно ждать долгое время синхронизации. Открытие файла происходит в течение доли секунд.\n"+
-                    "\n"+
-                    "После установки у тебя в \"Мой компьютер\" появился новый виртуальный диск " + drive + ":\\\n" +
-                    "На диске доступны папки:\n"+
-                    "- Моя страница\n"+
-                    "- Мои друзья\n"+
-                    "- Мои группы\n"+
-                    "- Поиск\n"+
-                    "\n"+
-                    "\n"+
-                    /*"В бесплатной версии в папках страница, друзья, группы и поиск - тебе доступна музыка для для прослушивания (only read).\n"+
+		    var readme = new PlainText("Прочти меня.txt");
+
+		    #region Много текста в readme.txt
+
+		    readme.SetText("Привет!\n" +
+		                   "\n" +
+		                   "Ты установил приложение VkDrive.\n" +
+		                   "\n" +
+		                   "Это полноценный виртуальный диск с музыкой и фотографиями из ВКонтакте.\n" +
+		                   "Для открытия файлов не нужно ждать долгое время синхронизации. Открытие файла происходит в течение доли секунд.\n" +
+		                   "\n" +
+		                   "После установки у тебя в \"Мой компьютер\" появился новый виртуальный диск " + drive + ":\\\n" +
+		                   "На диске доступны папки:\n" +
+		                   "- Моя страница\n" +
+		                   "- Мои друзья\n" +
+		                   "- Мои группы\n" +
+		                   "- Поиск\n" +
+		                   "\n" +
+		                   "\n" +
+		                   /*"В бесплатной версии в папках страница, друзья, группы и поиск - тебе доступна музыка для для прослушивания (only read).\n"+
                     "\n"+
                     "В полной версии в папках страница, друзья, группы - доступен просмотр фотографий и загрузка фото в альбомы своей страницы.\n"+
                     "Кроме прослушивания музыки - становится доступна загрузка музыкальных файлов в свои аудиозаписи.\n"+
                     "\n"+
                     "Для получения полной версии - пожертвуйте 1000 руб. на электронный кошелек хххххххххх. После чего (описание манипуляций для получения полной версии программы).\n"+
                     "\n"+
-                    */"P.S.: все файлы используются исключительно с серверов ВКонтакте для ознакомления и прослушивания. За сторонние копирования - автор программы ответственности не несёт.\n"+
-                    "\n"+
-                    "P.P.S.: ваши идеи, предложения, сообщения об ошибках присылайте на e-mail: xxx@yyy.ru");
-            #endregion
-            _topFiles.Add(readme);
+                    */
+		                   "P.S.: все файлы используются исключительно с серверов ВКонтакте для ознакомления и прослушивания. За сторонние копирования - автор программы ответственности не несёт.\n" +
+		                   "\n" +
+		                   "P.P.S.: ваши идеи, предложения, сообщения об ошибках присылайте на e-mail: xxx@yyy.ru");
 
-            //TopDirectory["Test"] = new DirTest();
-            //TopDirectory["Last.fm"] = new DirLastFm();*/
+		    #endregion
 
-            _log.Debug("Start MainFS OK");
-        }
+		    _topFiles.Add(readme);
 
-        public int Cleanup(string filename, DokanFileInfo info)
+		    _topFiles.Add(new PlainText( "Официальная группа.url", PlainText.InternetShortcut("https://vk.com/vkdriveapp")));
+			_topFiles.Add(new Settings("Обновить все.lnk", "--GC"));
+
+			//TopDirectory["Test"] = new DirTest();
+			//TopDirectory["Last.fm"] = new DirLastFm();*/
+
+			_log.Debug("Start MainFS OK");
+
+			// clear root directory
+		    var makeRootTimer = new System.Timers.Timer(5*60*1000) {Enabled = true};
+		    makeRootTimer.Elapsed += (sender, args) =>
+		    {
+			    MakeRootDirectory();
+			    GC.Collect();
+		    };
+            makeRootTimer.Start();
+
+		}
+
+	    private void MakeRootDirectory()
+	    {
+			_rootDirectory = new Dictionary<string, Dir>
+			{
+				["Моя Страница"] = new DirMy(),
+				["Мои Друзья"] = new DirUsers(),
+				["Мои Группы"] = new DirGroups(),
+				["Поиск"] = new DirSearch()
+			};
+		}
+
+	    public int Cleanup(string filename, DokanFileInfo info)
         {
-            //Log.Debug("MainFS Cleanup " + filename);
+            //_log.Debug("MainFS Cleanup " + filename);
             return 0;
         }
 
@@ -94,11 +116,26 @@ namespace VKDrive
         public int CreateDirectory(string filename, DokanFileInfo info)
         {
             _log.Debug("MainFS CerateDirectory " + filename);
-            var dir = GetDirEntry(filename);
-	        if (dir != null)
+	        var dir = GetDirEntry(filename);
+			if (dir != null)
 				return dir.CreateDirectory(CutEntryPath(filename).Trim('\\'), info);
-	        _log.Debug("MainFS CerateDirectory " + filename + " not find");
-	        return DokanNet.DOKAN_ERROR;
+			
+			if (filename.Length > 9 && filename.Substring(0, 9) == "\\_SYSTEM\\")
+			{
+				var cmd = filename.Substring(9);
+				_log.Debug("MainFS run cmd" + cmd);
+				switch (cmd)
+				{
+					case "GC":
+						MakeRootDirectory();
+						GC.Collect();
+						break;
+				}
+				return DokanNet.DOKAN_SUCCESS;
+			}
+
+			_log.Debug("MainFS CerateDirectory " + filename + " not find");
+			return DokanNet.DOKAN_ERROR;
         }
 
         public int CreateFile(
@@ -154,7 +191,7 @@ namespace VKDrive
 
             name = name.Substring(1, top);
 
-            return _topDirectory.ContainsKey(name) ? _topDirectory[name] : null;
+            return _rootDirectory.ContainsKey(name) ? _rootDirectory[name] : null;
         }
 
         public int FlushFileBuffers(
@@ -176,7 +213,7 @@ namespace VKDrive
                 _log.Debug("FindFiles " + filename);
                 if (filename == "\\")
                 {
-                    foreach (var name in _topDirectory.Keys)
+                    foreach (var name in _rootDirectory.Keys)
                     {
 	                    var finfo = new FileInformation
 	                    {
@@ -440,7 +477,7 @@ namespace VKDrive
         public void ClearCache()
         {
             _log.Debug("MainFS clearCache ");
-            foreach (var kvp in _topDirectory)
+            foreach (var kvp in _rootDirectory)
             {
                 kvp.Value.ClearCache();
             }
