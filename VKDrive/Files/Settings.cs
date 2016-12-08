@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using DokanNet;
 using VKDrive.Utils.ShellLink;
 
 namespace VKDrive.Files
@@ -54,24 +55,24 @@ namespace VKDrive.Files
             }
         }
 
-	    
-        public override int ReadFile(byte[] buffer, ref uint readBytes, long offset, Dokan.DokanFileInfo info)
+
+        public override NtStatus ReadFile(byte[] buffer, ref int readBytes, long offset, DokanFileInfo info)
         {
-	        if (offset < 0)
+            if (offset < 0)
 				throw new ArgumentOutOfRangeException(nameof(readBytes));
 	        if (offset >= Length)
             {
                 readBytes = 0;
-                return Dokan.DokanNet.DOKAN_SUCCESS;
+                return DokanResult.Success;
             }
             lock (SettingsLnkLock)
             {
                 var stream = new FileStream(_settingsLnk, FileMode.Open);
 
-                readBytes = Convert.ToUInt32(stream.Read(buffer, Convert.ToInt32(offset), buffer.Length));
+                readBytes = Convert.ToInt32(stream.Read(buffer, Convert.ToInt32(offset), buffer.Length));
                 stream.Close();
             }
-            return Dokan.DokanNet.DOKAN_SUCCESS;
+            return DokanResult.Success;
         }
     }
 }

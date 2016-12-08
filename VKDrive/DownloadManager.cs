@@ -8,7 +8,7 @@ using System.Xml.Linq;
 using System.Collections;
 using VKDrive.Files;
 using VKDrive.Utils;
-using Dokan;
+using DokanNet;
 using System.Data.SQLite;
 using log4net;
 using System.Reflection;
@@ -68,7 +68,7 @@ namespace VKDrive
         }
 
 
-        public int GetBlock(Download finfo, byte[] buffer, ref uint readBytes, long offset)
+        public NtStatus GetBlock(Download finfo, byte[] buffer, ref int readBytes, long offset)
         {
             _log.Debug("DM: c " + offset + " читать " + buffer.Length);
             #region Получение первичной информации
@@ -82,7 +82,7 @@ namespace VKDrive
                         HttpWebRequest webReq = (HttpWebRequest)WebRequest.Create(finfo.Url);
                         webReq.Timeout = Properties.Settings.Default.Timeout * 1000;
                         webReq.Method = "HEAD";
-                        System.Net.WebResponse result = webReq.GetResponse();
+                        var result = webReq.GetResponse();
                         finfo.Length = result.ContentLength;
                         result.Close();
                     }
@@ -90,14 +90,14 @@ namespace VKDrive
             }
             catch (Exception)
             {
-                return -1;
+                return DokanResult.Error;
             }
             #endregion
             
             if (offset >= finfo.Length)
             {
                 readBytes = 0;
-                return DokanNet.DOKAN_SUCCESS;
+                return DokanResult.Success;
             }
             
 
@@ -129,7 +129,7 @@ namespace VKDrive
             }
             catch (Exception)
             {
-                return DokanNet.DOKAN_ERROR;
+                return DokanResult.Error;
             }
             
             readBytes = 0;
@@ -162,7 +162,7 @@ namespace VKDrive
                     }
                     if (positionBlock.Count < blockIdEnd - blockIdStart + 1)
                     { // Кто-то загрузился с ошибкой
-                        return DokanNet.DOKAN_ERROR;
+                        return DokanResult.Error;
                     }
 
                     break;
@@ -210,7 +210,7 @@ namespace VKDrive
                         }
                     }
                     _log.Debug("Переписываем из файла с " + FStream.Position + ", блок длинной " + count);
-                    readBytes += (uint)FStream.Read(
+                    readBytes += FStream.Read(
                         buffer,
                         Convert.ToInt32(readBytes),
                         count
@@ -220,7 +220,7 @@ namespace VKDrive
             }
             _log.Debug("Итого отдали " + readBytes + " из " + buffer.Length + " запрашиваемых");
 
-            return DokanNet.DOKAN_SUCCESS;
+            return DokanResult.Success;
         }
 
         private void StartBlockDownload(Download finfo, int blockIdStart, int blockIdEnd)

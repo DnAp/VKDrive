@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Xml.Linq;
+using DokanNet;
 using VKDrive.VKAPI;
 
 namespace VKDrive.Files
@@ -22,16 +23,12 @@ namespace VKDrive.Files
             Url = curAudioWithAlbum.Url;
             Uid = curAudioWithAlbum.OwnerId;
             Aid = curAudioWithAlbum.Id;
-            _log.Debug("Make mp3 " + FileName + " : "+Url);
+            _log.Debug("Make mp3 " + FileName + " : " + Url);
         }
 
-        public override int ReadFile(
-            byte[] buffer,
-            ref uint readingBytes,
-            long offset,
-            Dokan.DokanFileInfo info)
+        public override NtStatus ReadFile(byte[] buffer, ref int readBytes, long offset, DokanFileInfo info)
         {
-			return DownloadManager.Instance.GetBlock(this, buffer, ref readingBytes, offset);
+            return DownloadManager.Instance.GetBlock(this, buffer, ref readBytes, offset);
         }
 
         /*public override string getUniqueId()
@@ -41,7 +38,7 @@ namespace VKDrive.Files
 
         public override int[] GetUniqueId()
         {
-            return new int[] { Uid, Aid };
+            return new int[] {Uid, Aid};
         }
 
         public override bool Update()
@@ -50,8 +47,9 @@ namespace VKDrive.Files
                 return false;
             try
             {
-                Dictionary<string, string> param = new Dictionary<string, string>() { { "audios", Aid.ToString() } };
-                JArray apiResult = (JArray)VKAPI.Vkapi.Instance.StartTaskSync(new VKAPI.ApiQuery("audio.getById", param));
+                Dictionary<string, string> param = new Dictionary<string, string>() {{"audios", Aid.ToString()}};
+                JArray apiResult =
+                    (JArray) VKAPI.Vkapi.Instance.StartTaskSync(new VKAPI.ApiQuery("audio.getById", param));
                 Url = apiResult[0].ToObject<SerializationObject.Audio>().Url;
                 CreationTime = DateTime.Now;
             }
@@ -61,7 +59,5 @@ namespace VKDrive.Files
             }
             return true;
         }
-		
-
     }
 }

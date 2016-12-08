@@ -1,4 +1,4 @@
-﻿using Dokan;
+﻿using DokanNet;
 using Newtonsoft.Json.Linq;
 using System.Collections.Generic;
 using VKDrive.Files;
@@ -45,12 +45,12 @@ namespace VKDrive.Dris
         }
 
 
-        public override int CreateDirectory(string filename, DokanFileInfo info)
+        public override NtStatus CreateDirectory(string filename, DokanFileInfo info)
         {
             RootNode.ChildsAdd(new Folder(filename, new Loader.VKontakte.Audio.Search(filename)));
 
             SaveDirectoriesList();
-            return DokanNet.DOKAN_SUCCESS;
+            return DokanResult.Success;
         }
 
         private void SaveDirectoriesList()
@@ -66,23 +66,23 @@ namespace VKDrive.Dris
 	        API.VkStorage.Set(StorageKey, files.Trim());
         }
 
-        public override int DeleteDirectory(string filename, DokanFileInfo info)
+        public override NtStatus DeleteDirectory(string filename, DokanFileInfo info)
         {
             var node = FindFiles(filename);
 
             if (node == null)
-                return DokanNet.ERROR_FILE_NOT_FOUND;
+                return DokanResult.FileNotFound;
             RootNode.Childs.Remove(node);
             SaveDirectoriesList();
-            return DokanNet.DOKAN_SUCCESS;
+            return DokanResult.Success;
         }
 
 
-        public override int MoveFile(string oldName, string newName, bool replace, DokanFileInfo info)
+        public override NtStatus MoveFile(string oldName, string newName, bool replace, DokanFileInfo info)
         {
             this.DeleteDirectory(oldName, info);
             this.CreateDirectory(newName, info);
-            return DokanNet.DOKAN_SUCCESS;
+            return DokanResult.Success;
         }
     }
 }

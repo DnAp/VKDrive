@@ -1,4 +1,4 @@
-﻿using Dokan;
+﻿using DokanNet;
 using log4net;
 using Newtonsoft.Json.Linq;
 using System;
@@ -15,6 +15,7 @@ namespace VKDrive.Dris
         private readonly ILog _log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         const string StorageKey = "DirUsers";
+
         public override void _LoadRootNode()
         {
             RootNode = new Folder("");
@@ -27,9 +28,9 @@ namespace VKDrive.Dris
             _log.Debug("_LoadFile " + file);
             if (file.Property["type"] == "friends.getLists")
             {
-                JObject apiResult = (JObject)Vkapi.Instance.StartTaskSync(new ApiQuery("friends.getLists"));
-                JArray items = (JArray)apiResult.GetValue("items");
-                
+                JObject apiResult = (JObject) Vkapi.Instance.StartTaskSync(new ApiQuery("friends.getLists"));
+                JArray items = (JArray) apiResult.GetValue("items");
+
                 Folder curFolder = new Folder("Все");
                 curFolder.Property.Add("type", "friends.get");
                 curFolder.Property.Add("lid", "0");
@@ -55,17 +56,18 @@ namespace VKDrive.Dris
             {
                 int key = Convert.ToInt32(file.Property["lid"]);
 
-                Dictionary<string, string> param = new Dictionary<string, string>(){
-				    {"fields", "first_name,last_name,domain"}
-			    };
+                Dictionary<string, string> param = new Dictionary<string, string>()
+                {
+                    {"fields", "first_name,last_name,domain"}
+                };
 
                 if (key > 0)
                 {
                     param.Add("list_id", key.ToString());
                 }
 
-                JObject apiResult = (JObject)Vkapi.Instance.StartTaskSync(new ApiQuery("friends.get", param));
-                JArray items = (JArray)apiResult.GetValue("items");
+                JObject apiResult = (JObject) Vkapi.Instance.StartTaskSync(new ApiQuery("friends.get", param));
+                JArray items = (JArray) apiResult.GetValue("items");
 
                 foreach (JObject item in items)
                 {
@@ -106,9 +108,9 @@ namespace VKDrive.Dris
             }
             else if (file.Property["type"] == "storage.get")
             {
-                string storageUids = API.VkStorage.Get(StorageKey);
+                string storageUids = VkStorage.Get(StorageKey);
 
-                file.ChildsAdd(new Files.Settings("Добавить людей.lnk"));
+                file.ChildsAdd(new Settings("Добавить людей.lnk"));
                 file.ChildsAdd(
                     new Files.SettingsXls(
                         "VKDirvePathData.xml", "Добавление людей",
@@ -119,7 +121,10 @@ namespace VKDrive.Dris
 
                 if (storageUids.Length > 0)
                 {
-                    JArray items = (JArray)VKAPI.Vkapi.Instance.StartTaskSync(new VKAPI.ApiQuery("users.get", new Dictionary<string, string>() { { "user_ids", storageUids.Replace('\n', ',') } }));
+                    JArray items =
+                        (JArray)
+                        Vkapi.Instance.StartTaskSync(new VKAPI.ApiQuery("users.get",
+                            new Dictionary<string, string> {{"user_ids", storageUids.Replace('\n', ',')}}));
                     foreach (JObject item in items)
                     {
                         file.ChildsAdd(CreateUserFolder(item.ToObject<SerializationObject.User>()));
@@ -130,16 +135,18 @@ namespace VKDrive.Dris
             {
                 System.Collections.ArrayList files = new System.Collections.ArrayList();
 
-                AudioApi.ExecuteGetAlbums(new Dictionary<string, string>(){
-				        {"owner_id", file.Property["uid"]}
-			        }, file.Childs);
+                AudioApi.ExecuteGetAlbums(new Dictionary<string, string>()
+                {
+                    {"owner_id", file.Property["uid"]}
+                }, file.Childs);
             }
             else if (file.Property["type"] == "audio.getInAlbum")
             {
-                AudioApi.LoadMp3(new Dictionary<string, string>(){
-				        {"owner_id", file.Property["uid"]},
-                        { "album_id", file.Property["album_id"]}
-			        }, file.Childs);
+                AudioApi.LoadMp3(new Dictionary<string, string>()
+                {
+                    {"owner_id", file.Property["uid"]},
+                    {"album_id", file.Property["album_id"]}
+                }, file.Childs);
             }
             else if (file.Property["type"] == "wait")
             {
@@ -160,7 +167,7 @@ namespace VKDrive.Dris
         /// <returns></returns>
         private Folder CreateUserFolder(SerializationObject.User user)
         {
-            Folder curFolder = new Folder(user.FirstName+" "+user.LastName);
+            Folder curFolder = new Folder(user.FirstName + " " + user.LastName);
 
             string uid = user.Id.ToString();
 
@@ -174,16 +181,16 @@ namespace VKDrive.Dris
 
             curFolder.ChildsAdd(
                 new PlainText(
-                    "Открыть в браузере.url", 
+                    "Открыть в браузере.url",
                     PlainText.InternetShortcut("https://vk.com/id" + uid)
                 )
             );
-            
+
             curFolder.IsLoaded = true;
             return curFolder;
         }
 
-        public override int CreateDirectory(Folder file, string filename, DokanFileInfo info)
+        public override NtStatus CreateDirectory(Folder file, string filename, DokanFileInfo info)
         {
             // https://vk.com/id1
             // https://vk.com/durov
@@ -194,29 +201,33 @@ namespace VKDrive.Dris
 
             if (filename.Length == 0)
             {
-                return DokanNet.DOKAN_ERROR;
+                return DokanResult.Error;
             }
             JObject apiResult;
             try
             {
-                apiResult = (JObject)VKAPI.Vkapi.Instance.StartTaskSync(new VKAPI.ApiQuery("users.get", new Dictionary<string, string>() { { "uids", filename } }));
+                apiResult =
+                    (JObject)
+                    VKAPI.Vkapi.Instance.StartTaskSync(new VKAPI.ApiQuery("users.get",
+                        new Dictionary<string, string>() {{"uids", filename}}));
             }
             catch (Exception e)
             {
                 if (e.Data.Contains("code") && e.Data["code"].ToString() == "113")
                 {
-                    Console.WriteLine("Invalid user id");
+                    Console.WriteLine(@"Invalid user id");
                 }
-                return DokanNet.DOKAN_ERROR;
+                return DokanResult.Error;
             }
 
             ushort count = 0;
-            JArray items = (JArray)apiResult.GetValue("items");
+            JArray items = (JArray) apiResult.GetValue("items");
             foreach (JObject item in items)
             {
                 SerializationObject.User user = item.ToObject<SerializationObject.User>();
+                /*
                 bool isDooble = false;
-                /*foreach (VFile file in RootNode.Childs)
+                foreach (VFile file in RootNode.Childs)
                 {
                     if (file.GetType() == typeof(Folder))
                     {
@@ -227,19 +238,19 @@ namespace VKDrive.Dris
                             break;
                         }
                     }
-                }*/
+                }
                 if (isDooble)
                 {
                     count++;
                     continue;
-                }
+                }*/
 
                 if (user.FirstName == "DELETED" || user.Deactivated != null)
                 {
                     continue;
                 }
 
-                API.VkStorage.Join(StorageKey, user.Id.ToString());
+                VkStorage.Join(StorageKey, user.Id.ToString());
 
                 file.ChildsAdd(CreateUserFolder(user));
 
@@ -248,10 +259,9 @@ namespace VKDrive.Dris
 
             if (count > 0)
             {
-                return DokanNet.DOKAN_SUCCESS;
+                return DokanResult.Success;
             }
-            return DokanNet.DOKAN_ERROR;
-
+            return DokanResult.Error;
         }
     }
 }

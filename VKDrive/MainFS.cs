@@ -1,61 +1,64 @@
-﻿using Dokan;
-using log4net;
+﻿using log4net;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
 using System.Reflection;
+using System.Security.AccessControl;
+using DokanNet;
 using VKDrive.Dris;
 using VKDrive.Files;
+using FileAccess = DokanNet.FileAccess;
 
 namespace VKDrive
 {
-    public class MainFs : DokanOperations 
+    public class MainFs : IDokanOperations
     {
-
-        #region DokanOperations member
-
         private Dictionary<string, Dir> _rootDirectory;
         private readonly List<VFile> _topFiles;
         private readonly ILog _log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
-	    public MainFs()
-	    {
-		    var drive = Properties.Settings.Default.MountPoint;
-		    _log.Debug("Start MainFS");
-		    _log.Debug("Db connect");
-		    try
-		    {
-			    Db.Instance.Connect();
-		    }
-		    catch (Exception e)
-		    {
-			    _log.Error("Db connect fail", e);
-			    throw;
-		    }
-		    _log.Debug("Make root tree");
-		    MakeRootDirectory();
+        public MainFs()
+        {
+            var drive = Properties.Settings.Default.MountPoint;
+            _log.Debug("Start MainFS");
+            _log.Debug("Db connect");
+            try
+            {
+                Db.Instance.Connect();
+            }
+            catch (Exception e)
+            {
+                _log.Error("Db connect fail", e);
+                throw;
+            }
+            _log.Debug("Make root tree");
+            MakeRootDirectory();
 
-		    _topFiles = new List<VFile>();
+            _topFiles = new List<VFile>();
 
-		    var readme = new PlainText("Прочти меня.txt");
+            var readme = new PlainText("Прочти меня.txt");
 
-		    #region Много текста в readme.txt
+            #region Много текста в readme.txt
 
-		    readme.SetText("Привет!\n" +
-		                   "\n" +
-		                   "Ты установил приложение VkDrive.\n" +
-		                   "\n" +
-		                   "Это полноценный виртуальный диск с музыкой и фотографиями из ВКонтакте.\n" +
-		                   "Для открытия файлов не нужно ждать долгое время синхронизации. Открытие файла происходит в течение доли секунд.\n" +
-		                   "\n" +
-		                   "После установки у тебя в \"Мой компьютер\" появился новый виртуальный диск " + drive + ":\\\n" +
-		                   "На диске доступны папки:\n" +
-		                   "- Моя страница\n" +
-		                   "- Мои друзья\n" +
-		                   "- Мои группы\n" +
-		                   "- Поиск\n" +
-		                   "\n" +
-		                   "\n" +
-		                   /*"В бесплатной версии в папках страница, друзья, группы и поиск - тебе доступна музыка для для прослушивания (only read).\n"+
+            readme.SetText("Привет!\n" +
+                           "\n" +
+                           "Ты установил приложение VkDrive.\n" +
+                           "\n" +
+                           "Это полноценный виртуальный диск с музыкой и фотографиями из ВКонтакте.\n" +
+                           "Для открытия файлов не нужно ждать долгое время синхронизации. Открытие файла происходит в течение доли секунд.\n" +
+                           "\n" +
+                           "После установки у тебя в \"Мой компьютер\" появился новый виртуальный диск " + drive +
+                           ":\\\n" +
+                           "На диске доступны папки:\n" +
+                           "- Моя страница\n" +
+                           "- Мои друзья\n" +
+                           "- Мои группы\n" +
+                           "- Поиск\n" +
+                           "\n" +
+                           "\n" +
+                           /*"В бесплатной версии в папках страница, друзья, группы и поиск - тебе доступна музыка для для прослушивания (only read).\n"+
                     "\n"+
                     "В полной версии в папках страница, друзья, группы - доступен просмотр фотографий и загрузка фото в альбомы своей страницы.\n"+
                     "Кроме прослушивания музыки - становится доступна загрузка музыкальных файлов в свои аудиозаписи.\n"+
@@ -63,119 +66,118 @@ namespace VKDrive
                     "Для получения полной версии - пожертвуйте 1000 руб. на электронный кошелек хххххххххх. После чего (описание манипуляций для получения полной версии программы).\n"+
                     "\n"+
                     */
-		                   "P.S.: все файлы используются исключительно с серверов ВКонтакте для ознакомления и прослушивания. За сторонние копирования - автор программы ответственности не несёт.\n" +
-		                   "\n" +
-		                   "P.P.S.: ваши идеи, предложения, сообщения об ошибках присылайте на e-mail: xxx@yyy.ru");
+                           "P.S.: все файлы используются исключительно с серверов ВКонтакте для ознакомления и прослушивания. За сторонние копирования - автор программы ответственности не несёт.\n" +
+                           "\n" +
+                           "P.P.S.: ваши идеи, предложения, сообщения об ошибках присылайте на e-mail: xxx@yyy.ru");
 
-		    #endregion
+            #endregion
 
-		    _topFiles.Add(readme);
+            _topFiles.Add(readme);
 
-		    _topFiles.Add(new PlainText( "Официальная группа.url", PlainText.InternetShortcut("https://vk.com/vkdriveapp")));
-			_topFiles.Add(new Settings("Обновить все.lnk", "--GC"));
+            _topFiles.Add(new PlainText("Официальная группа.url",
+                PlainText.InternetShortcut("https://vk.com/vkdriveapp")));
+            _topFiles.Add(new Settings("Обновить все.lnk", "--GC"));
 
-			//TopDirectory["Test"] = new DirTest();
-			//TopDirectory["Last.fm"] = new DirLastFm();*/
+            //TopDirectory["Test"] = new DirTest();
+            //TopDirectory["Last.fm"] = new DirLastFm();*/
 
-			_log.Debug("Start MainFS OK");
+            _log.Debug("Start MainFS OK");
 
-			// clear root directory
-		    var makeRootTimer = new System.Timers.Timer(5*60*1000) {Enabled = true};
-		    makeRootTimer.Elapsed += (sender, args) =>
-		    {
-			    MakeRootDirectory();
-			    GC.Collect();
-		    };
+            // clear root directory
+            var makeRootTimer = new System.Timers.Timer(5*60*1000) {Enabled = true};
+            makeRootTimer.Elapsed += (sender, args) =>
+            {
+                MakeRootDirectory();
+                GC.Collect();
+            };
             makeRootTimer.Start();
+        }
 
-		}
+        public NtStatus Mounted(DokanFileInfo info)
+        {
+            return DokanResult.Success;
+        }
 
-	    private void MakeRootDirectory()
-	    {
-			_rootDirectory = new Dictionary<string, Dir>
-			{
-				["Моя Страница"] = new DirMy(),
-				["Мои Друзья"] = new DirUsers(),
-				["Мои Группы"] = new DirGroups(),
-				["Поиск"] = new DirSearch()
-			};
-		}
+        private void MakeRootDirectory()
+        {
+            _rootDirectory = new Dictionary<string, Dir>
+            {
+                ["Моя Страница"] = new DirMy(),
+                ["Мои Друзья"] = new DirUsers(),
+                ["Мои Группы"] = new DirGroups(),
+                ["Поиск"] = new DirSearch()
+            };
+        }
 
-	    public int Cleanup(string filename, DokanFileInfo info)
+        public void Cleanup(string filename, DokanFileInfo info)
         {
             //_log.Debug("MainFS Cleanup " + filename);
-            return 0;
         }
 
-        public int CloseFile(string filename, DokanFileInfo info)
+
+        public void CloseFile(string filename, DokanFileInfo info)
         {
             //Log.Debug("MainFS Close file " + filename);
-            return 0;
         }
 
-        public int CreateDirectory(string filename, DokanFileInfo info)
+        public NtStatus CreateDirectory(string filename, DokanFileInfo info)
         {
             _log.Debug("MainFS CerateDirectory " + filename);
-	        var dir = GetDirEntry(filename);
-			if (dir != null)
-				return dir.CreateDirectory(CutEntryPath(filename).Trim('\\'), info);
-			
-			if (filename.Length > 9 && filename.Substring(0, 9) == "\\_SYSTEM\\")
-			{
-				var cmd = filename.Substring(9);
-				_log.Debug("MainFS run cmd" + cmd);
-				switch (cmd)
-				{
-					case "GC":
-						MakeRootDirectory();
-						GC.Collect();
-						break;
-				}
-				return DokanNet.DOKAN_SUCCESS;
-			}
+            var dir = GetDirEntry(filename);
+            if (dir != null)
+                return dir.CreateDirectory(CutEntryPath(filename).Trim('\\'), info);
 
-			_log.Debug("MainFS CerateDirectory " + filename + " not find");
-			return DokanNet.DOKAN_ERROR;
+            if (filename.Length > 9 && filename.Substring(0, 9) == "\\_SYSTEM\\")
+            {
+                var cmd = filename.Substring(9);
+                _log.Debug("MainFS run cmd" + cmd);
+                switch (cmd)
+                {
+                    case "GC":
+                        MakeRootDirectory();
+                        GC.Collect();
+                        break;
+                }
+                return DokanResult.Success;
+            }
+
+            _log.Debug("MainFS CerateDirectory " + filename + " not find");
+            return DokanResult.Error;
         }
 
-        public int CreateFile(
-            string filename,
-            System.IO.FileAccess access,
-            System.IO.FileShare share,
-            System.IO.FileMode mode,
-            System.IO.FileOptions options,
-            DokanFileInfo info)
+        public NtStatus CreateFile(string fileName, FileAccess access, FileShare share, FileMode mode,
+            FileOptions options, FileAttributes attributes, DokanFileInfo info)
         {
-            _log.Debug("MainFS CreateFile " + filename);
-            if (mode == System.IO.FileMode.Open)
+            _log.Debug("MainFS CreateFile " + fileName);
+            if (mode == FileMode.Open)
             {
-                _log.Debug("MainFS CreateFile " + filename + " GetFileInformation");
-                var fileinfo = new FileInformation();
-                var res = GetFileInformation(filename, fileinfo, info);
-                _log.Debug("MainFS CreateFile " + filename + " ok");
+                _log.Debug("MainFS CreateFile " + fileName + " GetFileInformation");
+                FileInformation fileInfo;
+                var res = GetFileInformation(fileName, out fileInfo, info);
+                _log.Debug("MainFS CreateFile " + fileName + " ok");
                 return res;
             }
-            _log.Debug("MainFS CreateFile " + filename + " mode not open");
-            return DokanNet.DOKAN_ERROR;
+            _log.Debug("MainFS CreateFile " + fileName + " mode not open");
+            return DokanResult.Error;
         }
 
-        public int DeleteDirectory(string filename, DokanFileInfo info)
+        public NtStatus DeleteDirectory(string filename, DokanFileInfo info)
         {
             _log.Debug("MainFS DeleteDirectory " + filename);
             var dir = GetDirEntry(filename);
-	        if (dir != null)
-				return dir.DeleteDirectory(CutEntryPath(filename), info);
-	        _log.Debug("MainFS DeleteDirectory " + filename + " not found");
-	        return DokanNet.DOKAN_ERROR;
+            if (dir != null)
+                return dir.DeleteDirectory(CutEntryPath(filename), info);
+            _log.Debug("MainFS DeleteDirectory " + filename + " not found");
+            return DokanResult.Error;
         }
 
-        public int DeleteFile(string filename, DokanFileInfo info)
+        public NtStatus DeleteFile(string filename, DokanFileInfo info)
         {
             _log.Debug("MainFS DeleteFile " + filename);
-            return DokanNet.DOKAN_ERROR;
+            return DokanResult.Error;
         }
 
-        private string CutEntryPath(string filename)
+        private static string CutEntryPath(string filename)
         {
             var top = filename.IndexOf('\\', 1);
             filename = top == -1 ? "\\" : filename.Substring(top);
@@ -194,137 +196,144 @@ namespace VKDrive
             return _rootDirectory.ContainsKey(name) ? _rootDirectory[name] : null;
         }
 
-        public int FlushFileBuffers(
+        public NtStatus FlushFileBuffers(
             string filename,
             DokanFileInfo info)
         {
             _log.Debug("FlushFileBuffers " + filename);
-            return -1;
+            return DokanResult.Error;
         }
 
-        public int FindFiles(
-            string filename,
-            System.Collections.ArrayList files,
-            DokanFileInfo info)
+        public NtStatus FindStreams(string fileName, out IList<FileInformation> streams, DokanFileInfo info)
         {
+            streams = new FileInformation[0];
+            return DokanResult.NotImplemented;
+        }
+
+        public NtStatus FindFilesWithPattern(string fileName, string searchPattern, out IList<FileInformation> files, DokanFileInfo info)
+        {
+            files = null;
+            return DokanResult.NotImplemented;
+        }
+
+        public NtStatus FindFiles(string fileName, out IList<FileInformation> files, DokanFileInfo info)
+        {
+            _log.Debug("FindFiles " + fileName);
+            files = new List<FileInformation>();
             try
             {
-
-                _log.Debug("FindFiles " + filename);
-                if (filename == "\\")
+                if (fileName == "\\")
                 {
                     foreach (var name in _rootDirectory.Keys)
                     {
-	                    var finfo = new FileInformation
-	                    {
-		                    FileName = name,
-		                    Attributes = System.IO.FileAttributes.Directory,
-		                    LastAccessTime = DateTime.Now,
-		                    LastWriteTime = DateTime.Now,
-		                    CreationTime = DateTime.Now
-	                    };
-	                    files.Add(finfo);
+                        var finfo = new FileInformation
+                        {
+                            FileName = name,
+                            Attributes = FileAttributes.Directory,
+                            LastAccessTime = DateTime.Now,
+                            LastWriteTime = DateTime.Now,
+                            CreationTime = DateTime.Now
+                        };
+                        files.Add(finfo);
                     }
-                    files.AddRange(_topFiles);
-                    _log.Debug("FindFiles " + filename + " OK return root");
+                    ((List<FileInformation>)files).AddRange(_topFiles.Select(vFile => vFile.Cast()));
+                    _log.Debug("FindFiles " + fileName + " OK return root");
                     return 0;
                 }
-                _log.Debug("FindFiles " + filename + " inBlackList");
-                if (InBlackList(filename))
+                _log.Debug("FindFiles " + fileName + " inBlackList");
+                if (InBlackList(fileName))
                 {
-                    _log.Debug("FindFiles " + filename + " black list");
-                    return DokanNet.ERROR_FILE_NOT_FOUND;
+                    _log.Debug("FindFiles " + fileName + " black list");
+                    return DokanResult.FileNotFound;
                 }
-                _log.Debug("FindFiles " + filename + " GetDirEntry");
-                var key = GetDirEntry(filename);
+                _log.Debug("FindFiles " + fileName + " GetDirEntry");
+                var key = GetDirEntry(fileName);
 
                 if (key == null)
                 {
-                    _log.Debug("FindFiles " + filename + " not found dir");
-                    return -1;
+                    _log.Debug("FindFiles " + fileName + " not found dir");
+                    return DokanResult.Error;
                 }
-                _log.Debug("FindFiles " + filename + " find dir " + key);
-                key.FindFiles(CutEntryPath(filename), files, info);
-                _log.Debug("FindFiles " + filename + " find ok");
-                return 0;
+                _log.Debug("FindFiles " + fileName + " find dir " + key);
+                key.FindFiles(CutEntryPath(fileName), (List<FileInformation>)files, info);
+                _log.Debug("FindFiles " + fileName + " find ok");
+                return DokanResult.Success;
             }
             catch (Exception e)
             {
                 _log.Error(e);
-                return -1;
+                return DokanResult.Error;
             }
         }
 
-        public int GetFileInformation(
-            string filename,
-            FileInformation fileinfo,
-            DokanFileInfo info)
+        public NtStatus GetFileInformation(string fileName, out FileInformation fileInfo, DokanFileInfo info)
         {
-            _log.Debug("MainFS GetFileInformation " + filename);
-            if (InBlackList(filename))
+            fileInfo = new FileInformation();
+            _log.Debug("MainFS GetFileInformation " + fileName);
+            if (InBlackList(fileName))
             {
-                _log.Debug("MainFS GetFileInformation " + filename + " black list");
-                return DokanNet.ERROR_FILE_NOT_FOUND;
+                _log.Debug("MainFS GetFileInformation " + fileName + " black list");
+                return DokanResult.FileNotFound;
             }
-            if (filename == "\\")
+            if (fileName == "\\")
             {
-                fileinfo.Attributes = System.IO.FileAttributes.Directory;
-                fileinfo.Attributes |= System.IO.FileAttributes.ReadOnly;
-                fileinfo.LastAccessTime = DateTime.Now;
-                fileinfo.LastWriteTime = DateTime.Now;
-                fileinfo.CreationTime = DateTime.Now;
+                fileInfo.Attributes = FileAttributes.Directory;
+                fileInfo.Attributes |= FileAttributes.ReadOnly;
+                fileInfo.LastAccessTime = DateTime.Now;
+                fileInfo.LastWriteTime = DateTime.Now;
+                fileInfo.CreationTime = DateTime.Now;
 
-                fileinfo.FileName = "\\";
-                _log.Debug("MainFS GetFileInformation " + filename + " root info");
-                return DokanNet.DOKAN_SUCCESS;
+                fileInfo.FileName = "\\";
+                _log.Debug("MainFS GetFileInformation " + fileName + " root info");
+                return DokanResult.Success;
             }
 
-            var dir = GetDirEntry(filename);
+            var dir = GetDirEntry(fileName);
             if (dir == null)
             {
-                _log.Debug("MainFS GetFileInformation " + filename + " dir find...");
+                _log.Debug("MainFS GetFileInformation " + fileName + " dir find...");
                 foreach (var curFile in _topFiles)
                 {
-                    if (curFile.FileName == filename.Trim('\\'))
+                    if (curFile.FileName == fileName.Trim('\\'))
                     {
-                        curFile.CopyTo(fileinfo);
-                        _log.Debug("MainFS GetFileInformation " + filename + " ok");
-                        return DokanNet.DOKAN_SUCCESS;
+                        curFile.CopyTo(fileInfo);
+                        _log.Debug("MainFS GetFileInformation " + fileName + " ok");
+                        return DokanResult.Success;
                     }
                 }
-                _log.Debug("MainFS GetFileInformation " + filename + " file not find");
-                return DokanNet.ERROR_FILE_NOT_FOUND;
+                _log.Debug("MainFS GetFileInformation " + fileName + " file not find");
+                return DokanResult.FileNotFound;
             }
 
-            var dirPath = CutEntryPath(filename);
+            var dirPath = CutEntryPath(fileName);
 
             if (dirPath == "\\") // todo В начале есть такой-же код, сгруппировать
             {
-                fileinfo.Attributes = System.IO.FileAttributes.Directory;
-                fileinfo.Attributes |= System.IO.FileAttributes.ReadOnly;
-                fileinfo.LastAccessTime = DateTime.Now;
-                fileinfo.LastWriteTime = DateTime.Now;
-                fileinfo.CreationTime = DateTime.Now;
-                fileinfo.FileName = filename.Trim('\\');
-                _log.Debug("MainFS GetFileInformation " + filename + " root dir after cut");
-                return DokanNet.DOKAN_SUCCESS;
+                fileInfo.Attributes = FileAttributes.Directory;
+                fileInfo.Attributes |= FileAttributes.ReadOnly;
+                fileInfo.LastAccessTime = DateTime.Now;
+                fileInfo.LastWriteTime = DateTime.Now;
+                fileInfo.CreationTime = DateTime.Now;
+                fileInfo.FileName = fileName.Trim('\\');
+                _log.Debug("MainFS GetFileInformation " + fileName + " root dir after cut");
+                return DokanResult.Success;
             }
-            
-            _log.Debug("MainFS GetFileInformation " + filename + " to subdir");
-            return dir.GetFileInformation(dirPath, fileinfo, info);
+
+            _log.Debug("MainFS GetFileInformation " + fileName + " to subdir");
+            return dir.GetFileInformation(dirPath, fileInfo, info);
         }
 
-        public int LockFile(
+        public NtStatus LockFile(
             string filename,
             long offset,
             long length,
             DokanFileInfo info)
         {
             _log.Debug("MainFS LockFile " + filename);
-            return DokanNet.DOKAN_SUCCESS;
+            return DokanResult.Success;
         }
 
-        public int MoveFile(
+        public NtStatus MoveFile(
             string filename,
             string newname,
             bool replace,
@@ -335,123 +344,116 @@ namespace VKDrive
             if (dir == null)
             {
                 _log.Debug("MainFS MoveFile " + filename + " directory not find");
-                return DokanNet.DOKAN_ERROR;
+                return DokanResult.Error;
             }
 
             return dir.MoveFile(CutEntryPath(filename), newname, replace, info);
         }
 
+        /*
         public int OpenDirectory(string filename, DokanFileInfo info)
         {
             return 0;
-        }
+        }*/
 
-        public int ReadFile(
-            string filename,
-            byte[] buffer,
-            ref uint readBytes,
-            long offset,
-            DokanFileInfo info)
+        public NtStatus ReadFile(string fileName, byte[] buffer, out int bytesRead, long offset, DokanFileInfo info)
         {
-            _log.Debug("MainFS ReadFile " + filename);
+            _log.Debug("MainFS ReadFile " + fileName);
+            bytesRead = 0;
             if (System.Threading.Thread.CurrentThread.Name == null)
             {
-                _log.Debug("Set thread name ReadFile " + filename);
+                _log.Debug("Set thread name ReadFile " + fileName);
                 System.Threading.Thread.CurrentThread.Name = "ReadFile thread";
             }
 
-            if (InBlackList(filename))
+            if (InBlackList(fileName))
             {
-                _log.Debug("MainFS ReadFile " + filename + " black list");
-                return DokanNet.ERROR_FILE_NOT_FOUND;
+                _log.Debug("MainFS ReadFile " + fileName + " black list");
+                return DokanResult.FileNotFound;
             }
 
-            var dir = GetDirEntry(filename);
+            var dir = GetDirEntry(fileName);
             if (dir == null)
             {
                 foreach (var curFile in _topFiles)
                 {
-                    if (curFile.FileName == filename.Trim('\\'))
+                    if (curFile.FileName == fileName.Trim('\\'))
                     {
-                        curFile.ReadFile(buffer, ref readBytes, offset, info);
-                        _log.Debug("MainFS ReadFile " + filename + " OK - null entry");
-                        return DokanNet.DOKAN_SUCCESS;
+                        curFile.ReadFile(buffer, ref bytesRead, offset, info);
+                        _log.Debug("MainFS ReadFile " + fileName + " OK - null entry");
+                        return DokanResult.Success;
                     }
                 }
-                _log.Debug("MainFS ReadFile " + filename + " NOT FIND - null entry");
-                return DokanNet.ERROR_FILE_NOT_FOUND;
+                _log.Debug("MainFS ReadFile " + fileName + " NOT FIND - null entry");
+                return DokanResult.FileNotFound;
             }
 
-            var res = dir.ReadFile(CutEntryPath(filename), buffer, ref readBytes, offset, info);
-            _log.Debug("MainFS ReadFile " + filename + " OK "+res);
-            
+            var res = dir.ReadFile(CutEntryPath(fileName), buffer, ref bytesRead, offset, info);
+            _log.Debug("MainFS ReadFile " + fileName + " OK " + res);
+
             return res;
         }
 
         public bool InBlackList(string filename)
         {
             //Log.Debug("MainFS inBlackList " + filename + " l:"+ filename.Length);
-	        if (filename.Length < 12)
-				return false;
-	        //Log.Debug("MainFS inBlackList " + filename + " substr");
-	        var cutFileName = filename.Substring(filename.Length - 12);
-	        //Log.Debug("MainFS inBlackList " + filename + " : "+cutFileName);
-                
-	        if(cutFileName == "\\desktop.ini" || cutFileName == "\\Desktop.ini" || cutFileName == "\\AutoRun.inf" )
-		        return true;
-	        return false;
+            if (filename.Length < 12)
+                return false;
+            //Log.Debug("MainFS inBlackList " + filename + " substr");
+            var cutFileName = filename.Substring(filename.Length - 12);
+            //Log.Debug("MainFS inBlackList " + filename + " : "+cutFileName);
+
+            if (cutFileName == "\\desktop.ini" || cutFileName == "\\Desktop.ini" || cutFileName == "\\AutoRun.inf")
+                return true;
+            return false;
         }
 
-        public int SetEndOfFile(string filename, long length, DokanFileInfo info)
+        public NtStatus SetEndOfFile(string filename, long length, DokanFileInfo info)
         {
             _log.Debug("MainFS SetEndOfFile " + filename + "\t" + length);
-            return DokanNet.DOKAN_ERROR;
+            return DokanResult.Error;
         }
 
-        public int SetAllocationSize(string filename, long length, DokanFileInfo info)
+        public NtStatus SetAllocationSize(string filename, long length, DokanFileInfo info)
         {
             _log.Debug("MainFS SetAllocationSize " + filename + "\t" + length);
-            return DokanNet.DOKAN_ERROR;
+            return DokanResult.Error;
         }
 
-        public int SetFileAttributes(
+        public NtStatus SetFileAttributes(
             string filename,
-            System.IO.FileAttributes attr,
+            FileAttributes attr,
             DokanFileInfo info)
         {
             _log.Debug("MainFS SetFileAttributes " + filename);
-            return DokanNet.DOKAN_ERROR;
+            return DokanResult.Error;
         }
 
-        public int SetFileTime(
-            string filename,
-            DateTime ctime,
-            DateTime atime,
-            DateTime mtime,
-            DokanFileInfo info)
+        public NtStatus SetFileTime(string fileName, DateTime? creationTime, DateTime? lastAccessTime,
+            DateTime? lastWriteTime, DokanFileInfo info)
         {
-            return DokanNet.DOKAN_ERROR;
+            return DokanResult.Error;
         }
 
-        public int UnlockFile(string filename, long offset, long length, DokanFileInfo info)
+        public NtStatus UnlockFile(string filename, long offset, long length, DokanFileInfo info)
         {
             _log.Debug("MainFS UnlockFile " + filename);
-            return 0;
+            return DokanResult.Success;
         }
 
-        public int Unmount(DokanFileInfo info)
+        public NtStatus Unmounted(DokanFileInfo info)
         {
             _log.Debug("MainFS Unmount ");
-            return 0;
+            return DokanResult.Success;
         }
-		
-	    // ReSharper disable once RedundantAssignment
-		public int GetDiskFreeSpace(ref ulong freeBytesAvailable, ref ulong totalBytes, ref ulong totalFreeBytes, DokanFileInfo info)
+
+        // ReSharper disable once RedundantAssignment
+        public NtStatus GetDiskFreeSpace(out long free, out long total, out long used, DokanFileInfo info)
         {
             //Log.Debug("MainFS GetDiskFreeSpace " );
-            freeBytesAvailable = 512 * 1024 * 1024;
-            totalBytes = 1024 * 1024 * 1024;
-            totalFreeBytes = 512 * 1024 * 1024;
+            free = 512*1024*1024;
+            total = 1024*1024*1024;
+            used = 512*1024*1024;
             /*if (VKMP3FSLogin.self.firtStartup)
             {
                 ProcessStartInfo startInfo = new ProcessStartInfo("explorer");
@@ -460,18 +462,32 @@ namespace VKDrive
                 System.Diagnostics.Process proc = System.Diagnostics.Process.Start(startInfo);
             }*/
 
-            return 0;
+            return DokanResult.Success;
         }
 
-        public int WriteFile(
-            string filename,
-            byte[] buffer,
-            ref uint writtenBytes,
-            long offset,
+        public NtStatus GetVolumeInformation(out string volumeLabel, out FileSystemFeatures features, out string fileSystemName,
             DokanFileInfo info)
         {
-            _log.Debug("MainFS WriteFile " + filename);
-            return -1;
+            throw new NotImplementedException();
+        }
+
+        public NtStatus GetFileSecurity(string fileName, out FileSystemSecurity security, AccessControlSections sections,
+            DokanFileInfo info)
+        {
+            throw new NotImplementedException();
+        }
+
+        public NtStatus SetFileSecurity(string fileName, FileSystemSecurity security, AccessControlSections sections,
+            DokanFileInfo info)
+        {
+            throw new NotImplementedException();
+        }
+
+        public NtStatus WriteFile(string fileName, byte[] buffer, out int bytesWritten, long offset, DokanFileInfo info)
+        {
+            _log.Debug("MainFS WriteFile " + fileName);
+            bytesWritten = 0;
+            return DokanResult.Error;
         }
 
         public void ClearCache()
@@ -487,9 +503,5 @@ namespace VKDrive
 
             _log.Debug("MainFS clearCache OK");
         }
-
-        #endregion
-    
-
     }
 }

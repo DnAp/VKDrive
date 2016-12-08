@@ -1,11 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.23107.0
+VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VKDrive", "VKDrive\VKDrive.csproj", "{8CAEEAD5-015C-4226-AD67-5C14079621CE}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DokanxNet", "..\DokanxNet\DokanxNet.csproj", "{A09B408A-26A0-4FF8-83D5-6E1B1DA5F63C}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VKDriveSettings", "..\VKDriveSettings\VKDriveSettings\VKDriveSettings.csproj", "{7941EAA0-24AE-488E-BDD4-22AE80A0D28B}"
 EndProject
@@ -25,14 +23,6 @@ Global
 		{8CAEEAD5-015C-4226-AD67-5C14079621CE}.Release|Any CPU.Build.0 = Release|Any CPU
 		{8CAEEAD5-015C-4226-AD67-5C14079621CE}.Release|x86.ActiveCfg = Release|Any CPU
 		{8CAEEAD5-015C-4226-AD67-5C14079621CE}.Release|x86.Build.0 = Release|Any CPU
-		{A09B408A-26A0-4FF8-83D5-6E1B1DA5F63C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A09B408A-26A0-4FF8-83D5-6E1B1DA5F63C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A09B408A-26A0-4FF8-83D5-6E1B1DA5F63C}.Debug|x86.ActiveCfg = Debug|x86
-		{A09B408A-26A0-4FF8-83D5-6E1B1DA5F63C}.Debug|x86.Build.0 = Debug|x86
-		{A09B408A-26A0-4FF8-83D5-6E1B1DA5F63C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A09B408A-26A0-4FF8-83D5-6E1B1DA5F63C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A09B408A-26A0-4FF8-83D5-6E1B1DA5F63C}.Release|x86.ActiveCfg = Release|x86
-		{A09B408A-26A0-4FF8-83D5-6E1B1DA5F63C}.Release|x86.Build.0 = Release|x86
 		{7941EAA0-24AE-488E-BDD4-22AE80A0D28B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{7941EAA0-24AE-488E-BDD4-22AE80A0D28B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7941EAA0-24AE-488E-BDD4-22AE80A0D28B}.Debug|x86.ActiveCfg = Debug|Any CPU

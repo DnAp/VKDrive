@@ -1,15 +1,15 @@
-﻿using Dokan;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using VKDrive.API;
 using VKDrive.Files;
 using System.Text.RegularExpressions;
+using DokanNet;
 using Newtonsoft.Json.Linq;
 using VKDrive.VKAPI;
 
 namespace VKDrive.Dris
 {
-	internal class DirGroups : Dir
+    internal class DirGroups : Dir
     {
         const string StorageKey = "DirGroups";
 
@@ -22,7 +22,6 @@ namespace VKDrive.Dris
 
         public override bool _LoadFile(Files.Folder file)
         {
-            
             if (file.Property["type"] == "groups.get")
             {
                 file.ChildsAdd(new Files.Settings("Добавить группу.lnk"));
@@ -34,8 +33,11 @@ namespace VKDrive.Dris
                         "Такая группа уже существует."
                     ));
 
-				JObject apiResult = (JObject)Vkapi.Instance.StartTaskSync(new ApiQuery("groups.get", new Dictionary<string, string> { { "extended", "1" } }));
-				JArray items = (JArray)apiResult.GetValue("items");
+                JObject apiResult =
+                    (JObject)
+                    Vkapi.Instance.StartTaskSync(new ApiQuery("groups.get",
+                        new Dictionary<string, string> {{"extended", "1"}}));
+                JArray items = (JArray) apiResult.GetValue("items");
 
                 List<int> gruopIds = new List<int>();
 
@@ -45,11 +47,14 @@ namespace VKDrive.Dris
                     file.ChildsAdd(CreateGroupFolder(group));
                     gruopIds.Add(group.Id);
                 }
-                
+
                 string gids = VkStorage.Get(StorageKey);
                 if (gids.Length > 0)
                 {
-                    JArray values = (JArray)Vkapi.Instance.StartTaskSync(new ApiQuery("groups.getById", new Dictionary<string, string> { { "group_ids", gids.Replace('\n', ',') } }));
+                    JArray values =
+                        (JArray)
+                        Vkapi.Instance.StartTaskSync(new ApiQuery("groups.getById",
+                            new Dictionary<string, string> {{"group_ids", gids.Replace('\n', ',')}}));
 
                     foreach (JObject item in items)
                     {
@@ -59,20 +64,21 @@ namespace VKDrive.Dris
                         file.ChildsAdd(CreateGroupFolder(group));
                     }
                 }
-                
             }
             else if (file.Property["type"] == "AudioApi.ExecuteGetAlbums")
             {
                 //// 15:Access denied: group audio is disabled
                 try
                 {
-                    AudioApi.ExecuteGetAlbums(new Dictionary<string, string>(){
-				        {"owner_id", "-"+file.Property["gid"]}
-			        }, file.Childs);
+                    AudioApi.ExecuteGetAlbums(new Dictionary<string, string>()
+                    {
+                        {"owner_id", "-" + file.Property["gid"]}
+                    }, file.Childs);
                 }
                 catch (Exception e)
                 {
-                    if(e.Data.Contains("code") && e.Data["code"].ToString() == "15" ){
+                    if (e.Data.Contains("code") && e.Data["code"].ToString() == "15")
+                    {
                         // 15:Access denied: group photos are disabled
 
                         var readmePlainText = new PlainText("Аудиозаписи отключены.txt");
@@ -81,16 +87,15 @@ namespace VKDrive.Dris
                         return true;
                     }
                     return false;
-                
                 }
-                
             }
             else if (file.Property["type"] == "audio.getInAlbum")
             {
-                AudioApi.LoadMp3(new Dictionary<string, string>(){
-				        {"gid", file.Property["gid"]},
-                        { "album_id", file.Property["album_id"]}
-			        }, file.Childs);
+                AudioApi.LoadMp3(new Dictionary<string, string>()
+                {
+                    {"gid", file.Property["gid"]},
+                    {"album_id", file.Property["album_id"]}
+                }, file.Childs);
             }
             else if (file.Property["type"] == "wait")
             {
@@ -123,10 +128,10 @@ namespace VKDrive.Dris
             subFolder = new Folder("Фотографии", new Loader.VKontakte.Photos.GetAlbums(-group.Id));
             curFolder.ChildsAdd(subFolder);
 
-			subFolder = new Folder("Стена(beta)", new Loader.VKontakte.Wall.Get(-group.Id));
-			curFolder.ChildsAdd(subFolder);
+            subFolder = new Folder("Стена(beta)", new Loader.VKontakte.Wall.Get(-group.Id));
+            curFolder.ChildsAdd(subFolder);
 
-			curFolder.ChildsAdd(
+            curFolder.ChildsAdd(
                 new PlainText(
                     "Открыть в браузере.url",
                     PlainText.InternetShortcut("https://vk.com/club" + gid)
@@ -137,31 +142,34 @@ namespace VKDrive.Dris
             return curFolder;
         }
 
-        public override int CreateDirectory(Folder file, string filename, DokanFileInfo info)
+        public override NtStatus CreateDirectory(Folder file, string filename, DokanFileInfo info)
         {
             // https://vk.com/club47348352
             // https://vk.com/vkdriveapp
             // https://vkontakte.ru/club47348352
-            
+
             filename = Regex.Replace(filename, @"http(s|)://.*/", "");
             // хавает любое занчение: 47348352, club47348352, vkdriveapp
 
             if (filename.Length == 0)
             {
-                return DokanNet.DOKAN_ERROR;
+                return DokanResult.Error;
             }
             JArray items;
             try
             {
-                items = (JArray)VKAPI.Vkapi.Instance.StartTaskSync(new VKAPI.ApiQuery("groups.getById", new Dictionary<string, string>() { { "group_id", filename } }));
+                items =
+                    (JArray)
+                    VKAPI.Vkapi.Instance.StartTaskSync(new VKAPI.ApiQuery("groups.getById",
+                        new Dictionary<string, string>() {{"group_id", filename}}));
             }
             catch (Exception e)
             {
                 if (e.Data.Contains("code") && e.Data["code"].ToString() == "125")
                 {
-                    Console.WriteLine("Invalid group id");
+                    Console.WriteLine(@"Invalid group id");
                 }
-                return DokanNet.DOKAN_ERROR;
+                return DokanResult.Error;
             }
 
             ushort count = 0;
@@ -176,7 +184,7 @@ namespace VKDrive.Dris
                     if (curFile.GetType() == typeof(Folder))
                     {
                         // проверка вхождения ключа нужна при разделении на каталоги. В этом случае сложим группу в корень после перезагрузки все исправится
-                        if (((Folder)curFile).Property.ContainsKey("gid") && ((Folder)curFile).Property["gid"] == gid)
+                        if (((Folder) curFile).Property.ContainsKey("gid") && ((Folder) curFile).Property["gid"] == gid)
                         {
                             isDooble = true;
                             break;
@@ -198,34 +206,27 @@ namespace VKDrive.Dris
 
                 file.ChildsAdd(CreateGroupFolder(group));
                 count++;
-
             }
 
             if (count > 0)
             {
-                return DokanNet.DOKAN_SUCCESS;
+                return DokanResult.Success;
             }
-            return DokanNet.DOKAN_ERROR;
-            
+            return DokanResult.Error;
         }
 
 
-        public override int DeleteDirectory(string filename, DokanFileInfo info)
+        public override NtStatus DeleteDirectory(string filename, DokanFileInfo info)
         {
             VFile node = FindFiles(filename);
-            if (node == null && node.GetType() == typeof(Folder) && ((Folder)node).Property.ContainsKey("inStorage"))
+            if (node == null && node.GetType() == typeof(Folder) && ((Folder) node).Property.ContainsKey("inStorage"))
             {
                 RootNode.Childs.Remove(node);
-                API.VkStorage.Remove(StorageKey, ((Folder)node).Property["gid"]);
-                return DokanNet.DOKAN_SUCCESS;
+                API.VkStorage.Remove(StorageKey, ((Folder) node).Property["gid"]);
+                return DokanResult.Success;
             }
 
-            return DokanNet.DOKAN_ERROR;
-
-            
+            return DokanResult.Error;
         }
-
-
-
     }
 }

@@ -1,9 +1,8 @@
-﻿using Dokan;
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Reflection;
+using DokanNet;
 using log4net;
 using VKDrive.Files;
 
@@ -115,19 +114,19 @@ namespace VKDrive.Dris
             return currentNode;
         }
 
-        public int FindFiles(
+        public NtStatus FindFiles(
             string filename,
-            System.Collections.ArrayList files,
+            List<FileInformation> files,
             DokanFileInfo info)
         {
             var file = FindFiles(filename);
             if (file == null)
-                return DokanNet.DOKAN_SUCCESS;
+                return DokanResult.Success;
 
             if (file.GetType() != typeof(Folder))
             {
-                files.Add(file);
-                return DokanNet.DOKAN_SUCCESS;
+                files.Add(file.Cast());
+                return DokanResult.Success;
             }
 
             if (!((Folder)file).IsLoaded)
@@ -137,11 +136,11 @@ namespace VKDrive.Dris
 
             foreach (var currentNode in ((Folder)file).Childs)
             {
-                if(!currentNode.IsHiddenFile)
-                    files.Add(currentNode);
+                if (!currentNode.IsHiddenFile)
+                    files.Add(currentNode.Cast());
             }
 
-            return DokanNet.DOKAN_SUCCESS;
+            return DokanResult.Success;
         }
 
         /// <summary>
@@ -151,12 +150,12 @@ namespace VKDrive.Dris
         /// <param name="name"></param>
         /// <param name="info"></param>
         /// <returns></returns>
-        public virtual int CreateDirectory(Folder file, string name, DokanFileInfo info)
+        public virtual NtStatus CreateDirectory(Folder file, string name, DokanFileInfo info)
         {
-            return DokanNet.DOKAN_ERROR;
+            return DokanResult.Error;
         }
 
-        public virtual int CreateDirectory(string filename, DokanFileInfo info)
+        public virtual NtStatus CreateDirectory(string filename, DokanFileInfo info)
         {
             var pathList = filename.Split('\\');
             var newDirName = pathList[pathList.Length - 1];
@@ -168,22 +167,22 @@ namespace VKDrive.Dris
                 return CreateDirectory((Folder)file, newDirName, info);
             }
 
-            return DokanNet.DOKAN_ERROR;
+            return DokanResult.Error;
         }
 
-        public virtual int DeleteDirectory(string filename, DokanFileInfo info)
+        public virtual NtStatus DeleteDirectory(string filename, DokanFileInfo info)
         {
-            return DokanNet.DOKAN_ERROR;
+            return DokanResult.Error;
         }
 
-        public virtual int GetFileInformation(
+        public virtual NtStatus GetFileInformation(
            string filename,
            FileInformation fileinfo,
            DokanFileInfo info)
         {
             var file = FindFiles(filename);
             if (file == null)
-                return -DokanNet.ERROR_FILE_NOT_FOUND;
+                return DokanResult.FileNotFound;
 
             if (file.Length == 0 && file is Download)
             {
@@ -197,27 +196,27 @@ namespace VKDrive.Dris
             }
 
             file.CopyTo(fileinfo);
-            return DokanNet.DOKAN_SUCCESS;
+            return DokanResult.Success;
         }
         
-        public virtual int ReadFile(
+        public virtual NtStatus ReadFile(
             string filename,
             byte[] buffer,
-            ref uint readBytes,
+            ref int readBytes,
             long offset,
             DokanFileInfo info)
         {
             var file = FindFiles(filename);
             if (file == null)
             {
-                return -DokanNet.ERROR_FILE_NOT_FOUND;
+                return DokanResult.FileNotFound;
             }
             return file.ReadFile(buffer, ref readBytes, offset, info);
         }
 
-        public virtual int MoveFile(string oldName, string newName, bool replace, DokanFileInfo info)
+        public virtual NtStatus MoveFile(string oldName, string newName, bool replace, DokanFileInfo info)
         {
-            return DokanNet.ERROR_ACCESS_DENIED;
+            return DokanResult.AccessDenied;
         }
 
 

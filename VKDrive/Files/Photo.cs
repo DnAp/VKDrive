@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using DokanNet;
 using VKDrive.VKAPI;
 
 namespace VKDrive.Files
@@ -36,12 +37,8 @@ namespace VKDrive.Files
             CreationTime = unixTimeStamp.AddSeconds(photo.Created);
             LastWriteTime = CreationTime;
         }
-        
-        public override int ReadFile(
-            byte[] buffer,
-            ref uint readBytes,
-            long offset,
-            Dokan.DokanFileInfo info)
+
+        public override NtStatus ReadFile(byte[] buffer, ref int readBytes, long offset, DokanFileInfo info)
         {
             return DownloadManager.Instance.GetBlock(this, buffer, ref readBytes, offset);
         }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using DokanNet;
 using VKDrive.Loader.IFace;
 using VKDrive.Utils;
 
@@ -145,14 +146,10 @@ namespace VKDrive.Files
 	        Childs = replaceChilds;
         }
 
-        public override int ReadFile(
-            byte[] buffer,
-            ref uint readBytes,
-            long offset,
-            Dokan.DokanFileInfo info)
+        public override NtStatus ReadFile(byte[] buffer, ref int readBytes, long offset, DokanFileInfo info)
         {
             // wat?
-            return Dokan.DokanNet.ERROR_ACCESS_DENIED;
+            return DokanResult.AccessDenied;
         }
     }
 }
